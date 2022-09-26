@@ -7,7 +7,7 @@
 efficiency(object, level = 0.05, type = "jondrow")
 }
 \arguments{
-\item{object}{fitted mgcv object with family \code{normhnorm} or \code{normexp}.}
+\item{object}{fitted mgcv object with family \code{normhnorm()} or \code{normexp()}.}
 
 \item{level}{for the \eqn{(1-level) \cdot 100\%} confidence interval. Must be in (0,1).}
 

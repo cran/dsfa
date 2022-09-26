@@ -15,16 +15,17 @@ normexp(link = list("identity", "log", "log"), s = -1)
 An object inheriting from class \code{general.family} of the mgcv package, which can be used in the dsfa package.
 }
 \description{
-The normexp family implements the normal-exponential distribution in which the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\lambda} can depend on additive predictors. Useable only with \code{mgcv::gam}, the additive predictors are specified via a list of formulae.
+The normexp family implements the normal-exponential distribution in which the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\lambda} can depend on additive predictors. Useable only with \code{\link[mgcv:gam]{gam()}}, the additive predictors are specified via a list of formulae.
 }
 \details{
-Used with gam to fit distributional stochastic frontier model. The function \code{gam} is from the mgcv package is called with a list containing three formulae:
+Used with gam to fit distributional stochastic frontier model. The function \code{\link[mgcv:gam]{gam()}} is from the mgcv package is called with a list containing three formulae:
 \enumerate{
 \item The first formula specifies the response on the left hand side and the structure of the additive predictor for \eqn{\mu} parameter on the right hand side. Link function is "identity".
 \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "log".
 \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\lambda} on the right hand side. Link function is "log".
 }
 The fitted values and linear predictors for this family will be three column matrices. The first column is the \eqn{\mu}, the second column is the \eqn{\sigma_V}, the third column is \eqn{\lambda}.
+For more details of the distribution see \code{dnormexp()}.
 }
 \examples{
 #Set seed, sample size and type of function
@@ -47,11 +48,11 @@ dat<-data.frame(y, x1, x2, x3, x4, x5)
 
 #Write formulae for parameters
 mu_formula<-y~x1+x2+I(x2^2)+s(x3, bs="ps")
-sigma_V_formula<-~1+x4
+sigma_v_formula<-~1+x4
 lambda_formula<-~1+s(x5, bs="ps")
 
 #Fit model
-model<-mgcv::gam(formula=list(mu_formula, sigma_V_formula, lambda_formula),
+model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, lambda_formula),
                  data=dat, family=normexp(s=s), optimizer = c("efs"))
 
 #Model summary

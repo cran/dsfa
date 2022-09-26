@@ -2,7 +2,7 @@
 #'
 #' Calculates the expected technical (in)efficiency index.
 #'
-#' @param object fitted mgcv object with family \code{normhnorm} or \code{normexp}.
+#' @param object fitted mgcv object with family \code{normhnorm()} or \code{normexp()}.
 #' @param type default is "jondrow" for \eqn{E[u|\epsilon]}, alternatively "battese" for \eqn{E[\exp(-u)|\epsilon]}.
 #' @param level for the \eqn{(1-level) \cdot 100\%} confidence interval. Must be in (0,1).
 #'

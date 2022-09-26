@@ -4,25 +4,54 @@
 \alias{cop}
 \title{cop family}
 \usage{
-cop(link = list("tanh"), u1, u2, cop_family = 1)
+cop(link = list("glogit"), W, family_cop = "normal")
 }
 \arguments{
-\item{link}{specifying the link for the \eqn{\tau}.}
+\item{link}{specifying the link for the \eqn{\delta}.}
 
-\item{u1}{probability integral transformed observations for margin 1.}
+\item{W}{matrix of pseudo observations. Must have at least two columns.}
 
-\item{u2}{probability integral transformed observations for margin 2.}
-
-\item{cop_family}{integer, defines the copula family:\cr
-\code{1} = Gaussian copula \cr}
+\item{family_cop}{string, defines the copula family:\cr
+\code{independent} = Independence copula \cr
+\code{normal} = Gaussian copula \cr
+\code{clayton} = Clayton copula \cr
+\code{gumbel} = Gumbel copula \cr
+\code{frank} = Frank copula \cr
+\code{joe} = Joe copula \cr}
 }
 \value{
 An object inheriting from class \code{general.family} of the mgcv package, which can be used in the dsfa package.
 }
 \description{
-The cop family implements multiple copula distributions in which the \eqn{\tau} can depend on additive predictors. Useable only with \code{mgcv::gam}, the additive predictors is specified via a formulae.
+The cop family implements multiple copula distributions in which the \eqn{\delta} can depend on additive predictors. Useable only with \code{\link[mgcv:gam]{gam()}}, the additive predictors is specified via a formulae.
 }
 \details{
-Internal function. Used with gam to fit copula model, which in turn is used for starting values. The function \code{gam} is from the mgcv package is called with a formulae.
+Internal function. Used with gam to fit copula model, which in turn is used for starting values. The function \code{gam} is from the mgcv package is called with a formula.
+The formula specifies the a dummy on the left hand side and the structure of the additive predictor for \eqn{\delta} parameter on the right hand side. Link function is "generalized logit".
+\eqn{glogit(\eta)=log((-min+mu)/(max-mu))} where for each family_cop argument there are specific \code{min} and \code{max} arguments, which are the boundaries of the parameter space. Although the parameter space is
+larger in theory, numeric under- and overflow limit the parameter space.
+\enumerate{
+\item  \code{independent}, min=0 and max=1
+\item  \code{normal}, min=-1 and max=1
+\item  \code{clayton}, min=1e-16 and max=28
+\item  \code{gumbel}, min=1 and max=17
+\item  \code{frank}, min=-35 and max=35
+\item  \code{joe}, min=1e-16 and max=30
+}
+}
+\examples{
+\donttest{
+set.seed(1337)
+N=1000 #Sample size
+x1<-runif(N,-1,1)
+eta<-1+2.5*x1
+delta<-(exp(eta)-1)/(exp(eta)+1)
+dat<-as.data.frame(rcop(n=N, delta=delta, family="normal"))
+dat$y<-1
+model<-mgcv::gam(y~x1, data=dat,
+                 family=cop(W=as.matrix(dat[,1:2, drop=FALSE]), family_cop="normal"),
+                 optimizer="efs")
+}
+
 }
 \keyword{internal}

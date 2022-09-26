@@ -8,13 +8,14 @@
 #'
 #' @return An object inheriting from class \code{general.family} of the mgcv package, which can be used in the dsfa package.
 #'
-#' @details Used with gam to fit distributional stochastic frontier model. The function \code{gam} is from the mgcv package is called with a list containing three formulae:
+#' @details Used with gam to fit distributional stochastic frontier model. The function \code{\link[mgcv:gam]{gam()}} is from the mgcv package is called with a list containing three formulae:
 #' \enumerate{
 #'   \item The first formula specifies the response on the left hand side and the structure of the additive predictor for \eqn{\mu} parameter on the right hand side. Link function is "identity".
 #'   \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "log".
 #'   \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_U} on the right hand side. Link function is "log".
 #' }
 #' The fitted values and linear predictors for this family will be three column matrices. The first column is the \eqn{\mu}, the second column is the \eqn{\sigma_V}, the third column is \eqn{\sigma_U}.
+#' For more details of the distribution see \code{dnormhnorm()}.
 #'
 #' @examples
 #' #Set seed, sample size and type of function
@@ -37,11 +38,11 @@
 #'
 #' #Write formulae for parameters
 #' mu_formula<-y~x1+x2+I(x2^2)+s(x3, bs="ps")
-#' sigma_V_formula<-~1+x4
-#' sigma_U_formula<-~1+s(x5, bs="ps")
+#' sigma_v_formula<-~1+x4
+#' sigma_u_formula<-~1+s(x5, bs="ps")
 #'
 #' #Fit model
-#' model<-mgcv::gam(formula=list(mu_formula, sigma_V_formula, sigma_U_formula),
+#' model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #'                  data=dat, family=normhnorm(s=s), optimizer = c("efs"))
 #'
 #' #Model summary
@@ -138,7 +139,7 @@ normhnorm <- function(link = list("identity", "log", "log"), s = -1){
     sigma_u <- family$linfo[[3]]$linkinv( eta2 )
     s       <- family$s
     ##Define parameters
-    l0<-dnormhnorm(x=y, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s, deriv=4, xg=family$tri, log.p = T)
+    l0<-dnormhnorm(x=y, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s, deriv=4, tri=family$tri, log.p = TRUE)
 
     l<-sum(l0)
 
@@ -215,7 +216,7 @@ normhnorm <- function(link = list("identity", "log", "log"), s = -1){
       s<-family$s
       para<-reparametrize(mean = qr.fitted(qr.x_all, y),
                             sd = abs(qr.fitted(qr.x_all, abs(qr.resid(qr.x_all, y)))),#sqrt(sum(qr.resid(qr.x_all, y)^2)/nrow(x1)),
-                          skew = qr.fitted(qr.x_all, qr.resid(qr.x_all, y)^3), dist="normhnorm", s=s)
+                          skew = qr.fitted(qr.x_all, qr.resid(qr.x_all, y)^3), family="normhnorm", s=s)
 
       yt1<-para$mu
 

@@ -20,7 +20,7 @@ reparametrize(
   sd = NULL,
   skew = NULL,
   par_u = NULL,
-  dist = NULL
+  family = NULL
 )
 }
 \arguments{
@@ -54,7 +54,7 @@ reparametrize(
 
 \item{par_u}{vector of \eqn{\sigma_U} or \eqn{\lambda}. Must be positive.}
 
-\item{dist}{\code{normhnorm} for normal-halfnormal and \code{normexp} for normal-exponential distribution.}
+\item{family}{\code{normhnorm} for normal-halfnormal and \code{normexp} for normal-exponential distribution.}
 }
 \value{
 Returns a data.frame with the parameter values for all specification.
@@ -70,22 +70,22 @@ The following input combinations are allowed for the normal-halfnormal distribut
 \item \code{xi}, \code{tau}, \code{alpha}
 \item \code{xi}, \code{omega}, \code{delta}
 \item \code{xi}, \code{tau}, \code{delta}
-\item \code{mean}, \code{sd}, \code{skew}, \code{dist="normhnorm"}    \eqn{\qquad,}
+\item \code{mean}, \code{sd}, \code{skew}, \code{family="normhnorm"}    \eqn{\qquad,}
 } while for the normal-exponential distribution the feasible inputs are
 \itemize{
 \item \code{mu}, \code{sigma_v}, \code{lambda}, \code{s}
 \item \code{mu}, \code{sigma_v}, \code{nu}, \code{s}
-\item \code{mean}, \code{sd}, \code{skew}, \code{dist="normexp"} \eqn{\qquad.}
+\item \code{mean}, \code{sd}, \code{skew}, \code{family="normexp"} \eqn{\qquad.}
 } Other input combinations are not feasible.
 }
 \examples{
 #Normal-halfnormal distribution
 para<-reparametrize(mu=1, sigma_v=2, sigma_u=3,s=-1)
-reparametrize(mean=para$mean, sd=para$sd, skew=para$skew, dist="normhnorm")
+reparametrize(mean=para$mean, sd=para$sd, skew=para$skew, family="normhnorm")
 
 #Normal-exponential distribution
 para<-reparametrize(mu=1, sigma_v=2, lambda=1/3,s=-1)
-reparametrize(mean=para$mean, sd=para$sd, skew=para$skew, dist="normexp")
+reparametrize(mean=para$mean, sd=para$sd, skew=para$skew, family="normexp")
 
 }
 \references{

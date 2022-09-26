@@ -18,13 +18,14 @@ An object inheriting from class \code{general.family} of the mgcv package, which
 The normhnorm family implements the normal-halfnormal distribution in which the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} can depend on additive predictors. Useable only with \code{mgcv::gam}, the additive predictors are specified via a list of formulae.
 }
 \details{
-Used with gam to fit distributional stochastic frontier model. The function \code{gam} is from the mgcv package is called with a list containing three formulae:
+Used with gam to fit distributional stochastic frontier model. The function \code{\link[mgcv:gam]{gam()}} is from the mgcv package is called with a list containing three formulae:
 \enumerate{
 \item The first formula specifies the response on the left hand side and the structure of the additive predictor for \eqn{\mu} parameter on the right hand side. Link function is "identity".
 \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "log".
 \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_U} on the right hand side. Link function is "log".
 }
 The fitted values and linear predictors for this family will be three column matrices. The first column is the \eqn{\mu}, the second column is the \eqn{\sigma_V}, the third column is \eqn{\sigma_U}.
+For more details of the distribution see \code{dnormhnorm()}.
 }
 \examples{
 #Set seed, sample size and type of function
@@ -47,11 +48,11 @@ dat<-data.frame(y, x1, x2, x3, x4, x5)
 
 #Write formulae for parameters
 mu_formula<-y~x1+x2+I(x2^2)+s(x3, bs="ps")
-sigma_V_formula<-~1+x4
-sigma_U_formula<-~1+s(x5, bs="ps")
+sigma_v_formula<-~1+x4
+sigma_u_formula<-~1+s(x5, bs="ps")
 
 #Fit model
-model<-mgcv::gam(formula=list(mu_formula, sigma_V_formula, sigma_U_formula),
+model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
                  data=dat, family=normhnorm(s=s), optimizer = c("efs"))
 
 #Model summary

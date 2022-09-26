@@ -1,53 +1,111 @@
 #' cop family
 #'
-#' The cop family implements multiple copula distributions in which the \eqn{\tau} can depend on additive predictors. Useable only with \code{mgcv::gam}, the additive predictors is specified via a formulae.
+#' The cop family implements multiple copula distributions in which the \eqn{\delta} can depend on additive predictors. Useable only with \code{\link[mgcv:gam]{gam()}}, the additive predictors is specified via a formulae.
 #'
-#'
-#' @param link specifying the link for the \eqn{\tau}.
-#' @param u1 probability integral transformed observations for margin 1.
-#' @param u2 probability integral transformed observations for margin 2.
-#' @param cop_family integer, defines the copula family:\cr
-#' `1` = Gaussian copula \cr
+#' @param link specifying the link for the \eqn{\delta}.
+#' @param W matrix of pseudo observations. Must have at least two columns.
+#' @param family_cop string, defines the copula family:\cr
+#' `independent` = Independence copula \cr
+#' `normal` = Gaussian copula \cr
+#' `clayton` = Clayton copula \cr
+#' `gumbel` = Gumbel copula \cr
+#' `frank` = Frank copula \cr
+#' `joe` = Joe copula \cr
 #'
 #' @return An object inheriting from class \code{general.family} of the mgcv package, which can be used in the dsfa package.
 #'
-#' @details Internal function. Used with gam to fit copula model, which in turn is used for starting values. The function \code{gam} is from the mgcv package is called with a formulae.
+#' @details Internal function. Used with gam to fit copula model, which in turn is used for starting values. The function \code{gam} is from the mgcv package is called with a formula.
+#' The formula specifies the a dummy on the left hand side and the structure of the additive predictor for \eqn{\delta} parameter on the right hand side. Link function is "generalized logit".
+#' \eqn{glogit(\eta)=log((-min+mu)/(max-mu))} where for each family_cop argument there are specific \code{min} and \code{max} arguments, which are the boundaries of the parameter space. Although the parameter space is
+#' larger in theory, numeric under- and overflow limit the parameter space.
+#' \enumerate{
+#'  \item  `independent`, min=0 and max=1
+#' \item  `normal`, min=-1 and max=1
+#' \item  `clayton`, min=1e-16 and max=28
+#' \item  `gumbel`, min=1 and max=17
+#' \item  `frank`, min=-35 and max=35
+#' \item  `joe`, min=1e-16 and max=30
+#' }
+#'
+#' @examples
+#' \donttest{
+#' set.seed(1337)
+#' N=1000 #Sample size
+#' x1<-runif(N,-1,1)
+#' eta<-1+2.5*x1
+#' delta<-(exp(eta)-1)/(exp(eta)+1)
+#' dat<-as.data.frame(rcop(n=N, delta=delta, family="normal"))
+#' dat$y<-1
+#' model<-mgcv::gam(y~x1, data=dat,
+#'                  family=cop(W=as.matrix(dat[,1:2, drop=FALSE]), family_cop="normal"),
+#'                  optimizer="efs")
+#'}
+#'
 #' @export
 #' @keywords internal
-cop <- function(link = list("tanh"), u1, u2, cop_family=1){
+cop <- function(link = list("glogit"), W, family_cop="normal"){
   #Object for mgcv::gam such that the copula can be estimated.
 
   #Number of parameters
   npar <- 1
 
+  #Delta parameter space boundaries
+  if(family_cop=="independent"){
+    a<-0
+    b<-1
+  }
+
+  if(family_cop=="normal"){
+    a<--1
+    b<-1
+  }
+
+  if(family_cop=="clayton"){
+    a<-0+1e-16
+    b<-28
+  }
+
+  if(family_cop=="gumbel"){
+    a<-1
+    b<-17
+  }
+
+  if(family_cop=="frank"){
+    a<--35
+    b<-35
+  }
+
+  if(family_cop=="joe"){
+    a<-1+1e-16
+    b<-30
+  }
+
   #Link functions
   if (length(link) != npar) stop("cop requires 1 links specified as character strings")
-  okLinks <- list("tanh")
+  okLinks <- list("glogit")
   stats <- list()
-  param.names <- c("Tau")
+  param.names <- c("delta")
 
   if (link[[1]] %in% okLinks[[1]]) {
     stats[[1]] <- list()
     stats[[1]]$valideta <- function(eta) TRUE
     stats[[1]]$link = link[[1]]
-    # y<-log((x+1)/(1-x))
-    # x<-(exp(y)-1)/(exp(y)+1)
 
-    stats[[1]]$linkfun <- eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
-    stats[[1]]$linkinv <- eval(parse(text = paste("function(eta) (exp(eta)-1)/(exp(eta)+1)")))
-    stats[[1]]$mu.eta <- eval(parse(text = paste("function(eta) 1/(1 + cosh(eta))")))
-    stats[[1]]$d2link <- eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
-    stats[[1]]$d3link <- eval(parse(text = paste("function(mu) -4*(3*mu^2+1)/(mu^2-1)^3"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
-    stats[[1]]$d4link <- eval(parse(text = paste("function(mu) 48*(mu^3+mu)/(mu^2-1)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
+    stats[[1]]$linkfun <- eval(parse(text = paste("function(mu) log((-",a,"+mu)/(",b,"-mu))")))#eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
+    stats[[1]]$linkinv <- eval(parse(text = paste("function(eta) exp(eta)/(1+exp(eta))*(",b,"-",a,")+",a)))
+    stats[[1]]$mu.eta <- eval(parse(text = paste("function(eta) exp(eta)*(",b,"-",a,")/(exp(eta)+1)^2")))
+    stats[[1]]$d2link <- eval(parse(text = paste("function(mu) 1/(",b,"-mu)^2-1/(",a,"-mu)^2")))#eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
+    stats[[1]]$d3link <- eval(parse(text = paste("function(mu) 2*(1/(",b,"-mu)^3+1/(-",a,"+mu)^3)"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
+    stats[[1]]$d4link <- eval(parse(text = paste("function(mu) 6/(",b,"-mu)^4-6/(",a,"-mu)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
   }
-  else stop(link[[1]], " link not available joint distribution")
+  else stop(link[[1]], " link not available cop distribution")
 
   #Calculate residuals
   residuals <- function(object, type = c("deviance", "response")) {
 
     type <- match.arg(type)
 
-    rsd <- cbind(object$family$u1,object$family$u2)
+    rsd <- object$family$W
 
     if (type=="response") return(rsd) else
       return(rsd)
@@ -66,18 +124,16 @@ cop <- function(link = list("tanh"), u1, u2, cop_family=1){
     # If offset is not null or a vector of zeros, give an error
     if( !is.null(offset[[1]]) && sum(abs(offset)) )  stop("offset not still available for this family")
 
-    jj <- attr(X, "lpi") ## extract linear predictor index
+    jj <- list(1:ncol(X))#attr(X, "lpi") ## extract linear predictor index
+    attr(jj,"overlap")<-FALSE
 
     npar <- 1
     n <- nrow(X)
-
-    eta <-  drop( X[ , jj[[1]], drop=FALSE] %*% coef[jj[[1]]] )
-
-
-    Tau      <- family$linfo[[1]]$linkinv( eta )
+    eta <-  drop( X %*% coef)
+    delta      <- matrix(family$linfo[[1]]$linkinv( eta ), nrow=n)
 
     ##Define parameters
-    l0<-dcop(U=cbind(family$u1,family$u2), Tau=Tau, family=family$cop_family, deriv=2, disjoint=T, log.p = TRUE)
+    l0<-dcop(W=as.matrix(family$W, nrow=n), delta=delta, family_cop=family$family_cop, deriv=2, log.p = TRUE)
 
     l<-sum(l0)
 
@@ -86,7 +142,7 @@ cop <- function(link = list("tanh"), u1, u2, cop_family=1){
 
       ig1 <- matrix(family$linfo[[1]]$mu.eta(eta), ncol=1)
 
-      g2 <- matrix(family$linfo[[1]]$d2link(Tau), ncol=1)
+      g2 <- matrix(family$linfo[[1]]$d2link(delta), ncol=1)
     }
 
     l1<-attr(l0,"gradient")[,3,drop=FALSE]
@@ -95,14 +151,14 @@ cop <- function(link = list("tanh"), u1, u2, cop_family=1){
     l3 <- l4 <- g3 <- g4 <- 0 ## defaults
 
     if (deriv>1) {
-      g3 <- matrix(family$linfo[[1]]$d3link(Tau), ncol=1)
+      g3 <- matrix(family$linfo[[1]]$d3link(delta), ncol=1)
 
       l3<-attr(l0,"l3")
 
     }
 
     if (deriv>3) {
-      g4 <- matrix(family$linfo[[1]]$d4link(Tau), ncol=1)
+      g4 <- matrix(family$linfo[[1]]$d4link(delta), ncol=1)
 
       l4<-attr(l0,"l4")
     }
@@ -125,34 +181,43 @@ cop <- function(link = list("tanh"), u1, u2, cop_family=1){
 
   #Function to calculate starting values of the coefficients
   initialize <- expression({
-    ## idea is to get starting values utilizing the method of moments,
-
+    ## idea is to get starting values utilizing the method of moments
     n <- rep(1, nobs)
     ## should E be used unscaled or not?..
     use.unscaled <- if (!is.null(attr(E,"use.unscaled"))) TRUE else FALSE
     if (is.null(start)) {
-      jj <- attr(x,"lpi")
-      start <- rep(0,ncol(x))
+
+      if(family$family_cop=="independent"){
+        cop_object<-copula::indepCopula(dim = 2)
+      }
+
+      if(family$family_cop=="normal"){
+        # cop_dim<-sum(lower.tri(diag(ncol(family$W)), diag=T))#(copula::p2P(c(delta)))
+        cop_object<-copula::normalCopula(dim = ncol(family$W))
+      }
+
+      if(family$family_cop=="clayton"){
+        cop_object<-copula::claytonCopula(dim = 2)
+      }
+
+      if(family$family_cop=="gumbel"){
+        cop_object<-copula::gumbelCopula(dim = 2)
+      }
+
+      if(family$family_cop=="frank"){
+        cop_object<-copula::frankCopula(dim = 2)
+      }
+
+      if(family$family_cop=="joe"){
+        cop_object<-copula::joeCopula(dim = 2)
+      }
 
 
-      # 7) Copula
-      x1 <-  x[, jj[[1]],drop=FALSE]
-      e1 <-  E[, jj[[1]],drop=FALSE]
-      #
-      # #Evaluate copula at probability integral transformed observations
-      # tau_start<-cor(x=pcomperr(q=y2, mu=para1$mu, sigma_v=para1$sigma_v, par_u=para1$par_u, s=s1, dist=family$dist[1], log.p=TRUE),
-      #                y=pcomperr(q=y1, mu=para2$mu, sigma_v=para2$sigma_v, par_u=para2$par_u, s=s2, dist=family$dist[2], log.p=TRUE),
-      #                use = "pairwise.complete.obs")
-      tau_start<-cor(family$u1,family$u2)
-      # family$linfo[[7]]$linkinv(par_start)
-      if (use.unscaled) {
-        x1 <- rbind(x1,e1)
-        startTau <- qr.coef(qr(x1), c(rep(family$linfo[[1]]$linkinv(tau_start),length(family$u1)),rep(0,nrow(E))))
-        startTau[!is.finite(startTau)] <- 0
-      } else { startTau <- pen.reg(x1,e1,rep(family$linfo[[1]]$linkinv(tau_start),length(family$u1))) }
-      start[jj[[1]]] <- startTau
+      #Wrapper for Copula package function
+      delta_start<-copula::fitCopula(copula=cop_object, data=family$W)@estimate
+      start <- c(family$linfo[[1]]$linkfun(delta_start),rep(0,ncol(x)-1))
     }
-    # print(start)
+    #
   }) ## initialize
 
 
@@ -170,7 +235,9 @@ cop <- function(link = list("tanh"), u1, u2, cop_family=1){
       if (is.null(off)) off <- list(0,0,0)
       off[[4]] <- 0
       for (i in 1:7) if (is.null(off[[i]])) off[[i]] <- 0
-      lpi <- attr(X,"lpi")
+      # lpi <- attr(X,"lpi")
+      lpi <- list(1:ncol(X))#attr(X, "lpi") ## extract linear predictor index
+      attr(lpi,"overlap")<-FALSE
       X1 <- X[,lpi[[1]],drop=FALSE]
 
       if (se) {
@@ -180,26 +247,36 @@ cop <- function(link = list("tanh"), u1, u2, cop_family=1){
       se <- FALSE
     }
 
-    fv <- list(cbind(family$u1,family$u2))
+    fv <- list(family$W)
     if (!se) return(fv) else {
       stop("se not still available for this family")
-      fv <- list(fit=cbind(family$u1,family$u2), se.fit=cbind(family$u1,family$u2))
+      fv <- list(fit=family$W, se.fit=family$W)
       return(fv)
     }
   } ##predict
 
 
+  preinitialize <- function(G) {
+    lpi<-list(1:ncol(G$X))#attr(X, "lpi") ## extract linear predictor index
+    attr(lpi,"overlap")<-FALSE
+    attr(G$X,"lpi")<-lpi
+
+    return(list(X=G$X))
+  }
+
   structure(list(family="cop", ll=ll, link=paste(link), nlp=npar,
                  tri = mgcv::trind.generator(npar), ## symmetric indices for accessing derivative arrays
                  initialize=initialize,
-                 u1=u1,
-                 u2=u2,
-                 cop_family=cop_family,
+                 W=W,
+                 min=a,
+                 max=b,
+                 family_cop=family_cop,
                  residuals=residuals,
                  predict=predict,
+                 preinitialize=preinitialize,
                  linfo = stats, ## link information list
                  d2link=1, d3link=1, d4link=1, ## signals to fix.family.link that all done
                  ls=1, ## signals that ls not needed here
-                 available.derivs = 2 ## can use full Newton here
+                 available.derivs = 0 ## can use full Newton here
   ),class = c("general.family","extended.family","family"))
 } ## cop

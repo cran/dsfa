@@ -17,7 +17,7 @@
 #' @param sd vector of standard deviation of \eqn{\mathcal{E}}. Must be positive.
 #' @param skew  vector of skewness of \eqn{\mathcal{E}}.
 #' @param par_u vector of \eqn{\sigma_U} or \eqn{\lambda}. Must be positive.
-#' @param dist \code{normhnorm} for normal-halfnormal and \code{normexp} for normal-exponential distribution.
+#' @param family \code{normhnorm} for normal-halfnormal and \code{normexp} for normal-exponential distribution.
 #' @return Returns a data.frame with the parameter values for all specification.
 #'
 #' @details The following input combinations are allowed for the normal-halfnormal distribution
@@ -27,23 +27,23 @@
 #'   \item \code{xi}, \code{tau}, \code{alpha}
 #'   \item \code{xi}, \code{omega}, \code{delta}
 #'   \item \code{xi}, \code{tau}, \code{delta}
-#'   \item \code{mean}, \code{sd}, \code{skew}, \code{dist="normhnorm"}    \eqn{\qquad,}
+#'   \item \code{mean}, \code{sd}, \code{skew}, \code{family="normhnorm"}    \eqn{\qquad,}
 #' } while for the normal-exponential distribution the feasible inputs are
 #' \itemize{
 #'   \item \code{mu}, \code{sigma_v}, \code{lambda}, \code{s}
 #'   \item \code{mu}, \code{sigma_v}, \code{nu}, \code{s}
-#'   \item \code{mean}, \code{sd}, \code{skew}, \code{dist="normexp"} \eqn{\qquad.}
+#'   \item \code{mean}, \code{sd}, \code{skew}, \code{family="normexp"} \eqn{\qquad.}
 #' } Other input combinations are not feasible.
 #'
 #' @examples
 #' #Normal-halfnormal distribution
 #' para<-reparametrize(mu=1, sigma_v=2, sigma_u=3,s=-1)
-#' reparametrize(mean=para$mean, sd=para$sd, skew=para$skew, dist="normhnorm")
+#' reparametrize(mean=para$mean, sd=para$sd, skew=para$skew, family="normhnorm")
 #'
 
 #' #Normal-exponential distribution
 #' para<-reparametrize(mu=1, sigma_v=2, lambda=1/3,s=-1)
-#' reparametrize(mean=para$mean, sd=para$sd, skew=para$skew, dist="normexp")
+#' reparametrize(mean=para$mean, sd=para$sd, skew=para$skew, family="normexp")
 #'
 #' @references
 #' \itemize{
@@ -55,18 +55,18 @@
 reparametrize<-function(mu=NULL, sigma_v=NULL, sigma_u=NULL, s=NULL,
                         lambda=NULL, nu=NULL,
                         xi=NULL, omega=NULL, alpha=NULL, delta=NULL, tau=NULL,
-                        mean=NULL, sd=NULL, skew=NULL, par_u=NULL, dist=NULL){
+                        mean=NULL, sd=NULL, skew=NULL, par_u=NULL, family=NULL){
   out<-NULL
 
-  if(is.null(dist)){
-    dist<-0
+  if(is.null(family)){
+    family<-0
   }
 
-  if(dist=="normhnorm"&!is.null(par_u)){
+  if(family=="normhnorm"&!is.null(par_u)){
      sigma_u<-par_u
   }
 
-  if(dist=="normhnorm"|!is.null(sigma_u)|!is.null(xi)|!is.null(omega)|!is.null(alpha)|!is.null(delta)|!is.null(tau)){
+  if(family=="normhnorm"|!is.null(sigma_u)|!is.null(xi)|!is.null(omega)|!is.null(alpha)|!is.null(delta)|!is.null(tau)){
     #Function which transforms parameters
     #Inputs a vector of either
     #1) mean, sd, skew (csn parametrization)
@@ -185,11 +185,11 @@ reparametrize<-function(mu=NULL, sigma_v=NULL, sigma_u=NULL, s=NULL,
                     mean=mean, sd=sd, skew=skew, par_u=sigma_u)
   }
 
-  if(dist=="normexp"&!is.null(par_u)){
+  if(family=="normexp"&!is.null(par_u)){
     lambda<-par_u
   }
 
-  if(dist=="normexp"|!is.null(lambda)|!is.null(nu)){
+  if(family=="normexp"|!is.null(lambda)|!is.null(nu)){
 
     if(is.numeric(mean) & is.numeric(sd) & is.numeric(skew)){
       if(is.null(s)){

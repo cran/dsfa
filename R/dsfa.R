@@ -8,38 +8,89 @@
 #'
 #' @description
 #' The \code{dsfa} package implements the specification, estimation and prediction of distributional stochastic frontier models via \code{mgcv}.
-#' The basic distributional stochastic frontier model is given by: \deqn{Y_n = \eta^\mu(\boldsymbol{x}_n^\mu) + V_n + s \cdot U_n } where \eqn{n \in \{1,2,...,N\}}, \eqn{V_n} and \eqn{U_n} are the noise and (in)efficiency respectively.
+#' The basic distributional stochastic frontier model is given by: \deqn{Y_n = \eta^\mu(\boldsymbol{x}_n^\mu) + V_n + s \cdot U_n } where \eqn{n \in \{1,2,...,N\}}. \eqn{V_n} and \eqn{U_n} are the noise and (in)efficiency respectively.
 #' \itemize{
-#' \item For \eqn{s=-1}, \eqn{\eta^\mu(\cdot)} is the production function and \eqn{\boldsymbol{x}_n^\mu} are the log inputs. Alternatively, if \eqn{s=1}, \eqn{\eta^\mu(\cdot)} is the cost function and \eqn{\boldsymbol{x}_n^\mu} are the log cost.
+#' \item For \eqn{s=-1}, \eqn{\eta^\mu(\cdot)} is the production function and \eqn{\boldsymbol{x}_n^\mu} are the log inputs. Alternatively, if \eqn{s=1}, \eqn{\eta^\mu(\cdot)} is the cost function and \eqn{\boldsymbol{x}_n^\mu} are the log cost. The vector \eqn{\boldsymbol{x}_n^\mu} may also contain other variables.
 #' \item The noise is represented as \eqn{V_n \sim N(0,\sigma_{Vn}^2)}, where \eqn{\sigma_{Vn}=\exp(\eta^{\sigma_{V}}(\boldsymbol{x}_n^{\sigma_{V}}))}. Here, \eqn{\boldsymbol{x}_n^{\sigma_{V}}} are the observed covariates which influence the parameter of the noise.
-#' \item The inefficiency is represented either as \eqn{U_n \sim HN(\sigma_{Un}^2)} or as \eqn{U_n \sim Exp(\lambda_{n})}, where \eqn{\sigma_{Un}=\exp(\eta^{\sigma_{Un}}(\boldsymbol{x}_n^{\sigma_{U}}))} and \eqn{\lambda_{n}=\exp(\eta^{\lambda_{n}}(\boldsymbol{x}_n^{\lambda}))}. Here, \eqn{\boldsymbol{x}_n^{\sigma_{U}}} or \eqn{\boldsymbol{x}_n^{\lambda}} are the observed covariates which influence the respective parameter of the (in)efficiency.
-#'  }
-#' If \eqn{U_n \sim HN(\sigma_{Un}^2)}, then: \deqn{Y \sim normhnorm(\mu_n=\eta^\mu(\boldsymbol{x}_n^\mu), \sigma_{Vn}=\exp(\eta^{\sigma_{V}}(\boldsymbol{x}_n^{\sigma_{V}})), \sigma_{Un}=\exp(\eta^{\sigma_{U}}(\boldsymbol{x}_n^{\sigma_{U}})), s=s)}
-#' Alternatively, if \eqn{U_n \sim Exp(\lambda_{n})} then: \deqn{Y \sim normexp(\mu_n=\eta^\mu(\boldsymbol{x}_n^\mu), \sigma_{Vn}=\exp(\eta^{\sigma_{V}}(\boldsymbol{x}_n^{\sigma_{V}})), \lambda_{n}=\exp(\eta^{\lambda}(\boldsymbol{x}_n^{\lambda})), s=s)}.
-#'
-#' The package fits \eqn{\eta^\mu(\boldsymbol{x}_n^\mu), \eta^{\sigma_{V}}(\boldsymbol{x}_n^{\sigma_{V}})} and \eqn{\eta^{\lambda}(\boldsymbol{x}_n^{\lambda})} or \eqn{\eta^{\sigma_{U}}(\boldsymbol{x}_n^{\sigma_{U}})}.
-#'
-#' @details
+#' \item The inefficiency can be represented in two ways.
+#' \itemize{
+#' \item If \eqn{U_n \sim HN(\sigma_{Un}^2)}, where \eqn{\sigma_{Un}=\exp(\eta^{\sigma_{Un}}(\boldsymbol{x}_n^{\sigma_{U}}))}.  Here, \eqn{\boldsymbol{x}_n^{\sigma_{U}}} are the observed covariates which influence the parameter of the (in)efficiency. Consequently: \deqn{Y_n \sim normhnorm(\mu_n=\eta^\mu(\boldsymbol{x}_n^\mu), \sigma_{Vn}=\exp(\eta^{\sigma_{V}}(\boldsymbol{x}_n^{\sigma_{V}})), \sigma_{Un}=\exp(\eta^{\sigma_{U}}(\boldsymbol{x}_n^{\sigma_{U}})), s=s)}. For more details see \code{dnormhnorm()}.
+#' \item If \eqn{U_n \sim Exp(\lambda_{n})}, where \eqn{\lambda_{n}=\exp(\eta^{\lambda_{n}}(\boldsymbol{x}_n^{\lambda}))}. Here, \eqn{\boldsymbol{x}_n^{\lambda}} are the observed covariates which influence the parameter of the (in)efficiency. Consequently: \deqn{Y_n \sim normexp(\mu_n=\eta^\mu(\boldsymbol{x}_n^\mu), \sigma_{Vn}=\exp(\eta^{\sigma_{V}}(\boldsymbol{x}_n^{\sigma_{V}})), \lambda_{n}=\exp(\eta^{\lambda}(\boldsymbol{x}_n^{\lambda})), s=s)}. For more details see \code{dnormexp()}.
+#' }
+#' }
+#' Let \eqn{\theta_n} be a parameter of the distribution of \eqn{Y_n}.
+#' Further, let \eqn{g^{-1}_{\theta}(\cdot)} be the monotonic response function, which links the additive predictor \eqn{\eta(\boldsymbol{x}_n^\theta)} to the parameter space for the parameter \eqn{\theta_n} via the additive model:
+#' \deqn{g^{-1}_{\theta}(\theta_n)=\eta(\boldsymbol{x}_n^\theta)=\beta^\theta_0 + \sum_{j^\theta=1}^{J^\theta} h^\theta_{j^\theta}(x^\theta_{nj^\theta})}
+#' Thus, the additive predictor \eqn{\eta(\boldsymbol{x}_n^\theta)} is made up by the intercept \eqn{\beta^\theta_0} and \eqn{J^\theta} smooths terms.
 #' The \code{mgcv} packages provides a framework for fitting distributional regression models.
-#' The formulae in \code{\link[mgcv:gam]{gam}} allow for smooth terms utilizing the function \code{\link[mgcv:s]{s}}.
-#' These may be
+#' The additive predictors can be defined via formulae in \code{\link[mgcv:gam]{gam()}}. Within the formulae for the parameter \eqn{\theta_n}, the smooth function for the variable \eqn{x^\theta_{nj^\theta}} can be specified via the function \code{\link[mgcv:s]{s()}}, which is \eqn{h^\theta_{j^\theta}(\cdot)} in the notation above.
+#' The smooth functions may be:
 #' \itemize{
 #' \item linear effects
-#' \item non-linear effects which can be modeled via penalized regression splines, e.g. \code{\link[mgcv:p.spline]{p.spline}}, \code{\link[mgcv:tprs]{tprs}}
-#' \item random effects, \code{\link[mgcv:random.effects]{random.effects}},
-#' \item spatial effects which can be modeled via \code{\link[mgcv:mrf]{mrf}}.
+#' \item non-linear effects which can be modeled via penalized regression splines, e.g. \code{\link[mgcv:p.spline]{p.spline()}}, \code{\link[mgcv:tprs]{tprs()}}
+#' \item random effects, \code{\link[mgcv:random.effects]{random.effects()}},
+#' \item spatial effects which can be modeled via \code{\link[mgcv:mrf]{mrf()}}.
 #' }
-#' An overview is provided at \code{\link[mgcv:smooth.terms]{smooth.terms}}. The functions \code{\link[mgcv:gam]{gam}}, \code{\link[mgcv:predict.gam]{predict.gam}} and \code{\link[mgcv:plot.gam]{plot.gam}}, are alike to the basic S functions.
-#' A number of other functions such as \code{\link[mgcv:summary.gam]{summary.gam}}, \code{\link[mgcv:residuals.gam]{residuals.gam}} and \code{\link[mgcv:anova.gam]{anova.gam}} are also provided, for extracting information from a fitted \code{\link[mgcv:gamObject]{gamOject}}.
+#' An overview is provided at \code{\link[mgcv:smooth.terms]{smooth.terms()}}. The functions \code{\link[mgcv:gam]{gam()}}, \code{\link[mgcv:predict.gam]{predict.gam()}} and \code{\link[mgcv:plot.gam]{plot.gam()}}, are alike to the basic S functions.
+#' A number of other functions such as \code{\link[mgcv:summary.gam]{summary.gam()}}, \code{\link[mgcv:residuals.gam]{residuals.gam}} and \code{\link[mgcv:anova.gam]{anova.gam}} are also provided, for extracting information from a fitted \code{\link[mgcv:gamObject]{gamOject}}.
 #'
 #' The main functions are:
 #' \itemize{
-#' \item \code{\link{normhnorm}}  Object which can be used to fit a normal-halfnormal stochastic frontier model with the \code{mgcv} package.
-#' \item \code{\link{normexp}}  Object which can be used to fit a normal-exponential stochastic frontier model with the \code{mgcv} package.
-#' \item \code{\link{comperr_mv}}  Object which can be used to fit a multivariate stochastic frontier model with the \code{mgcv} package.
-#' \item \code{\link{elasticity}}  Calculates and plots the elasticity of a smooth function.
-#' \item \code{\link{efficiency}}  Calculates the expected technical (in)efficiency index \eqn{E[u|\epsilon]} or \eqn{E[\exp(-u)|\epsilon]}.
+#' \item \code{normhnorm()}  Object which can be used to fit a normal-halfnormal stochastic frontier model with the \code{mgcv} package.
+#' \item \code{normexp()}  Object which can be used to fit a normal-exponential stochastic frontier model with the \code{mgcv} package.
+#' \item \code{comperr_mv()}  Object which can be used to fit a multivariate stochastic frontier model with the \code{mgcv} package.
+#' \item \code{elasticity()}  Calculates and plots the elasticity of a smooth function.
+#' \item \code{efficiency()}  Calculates the expected technical (in)efficiency index \eqn{E[u|\epsilon]} or \eqn{E[\exp(-u)|\epsilon]}.
 #' }
+#'
+#' @examples
+#' #Set seed, sample size and type of function
+#' set.seed(1337)
+#' N=500 #Sample size
+#' s=-1 #Set to production function
+#'
+#' #Generate covariates
+#' x1<-runif(N,-1,1); x2<-runif(N,-1,1); x3<-runif(N,-1,1)
+#' x4<-runif(N,-1,1); x5<-runif(N,-1,1)
+#'
+#' #Set parameters of the distribution
+#' mu=2+0.75*x1+0.4*x2+0.6*x2^2+6*log(x3+2)^(1/4) #production function parameter
+#' sigma_v=exp(-1.5+0.75*x4) #noise parameter
+#' sigma_u=exp(-1+sin(2*pi*x5)) #inefficiency parameter
+#'
+#' #Simulate responses and create dataset
+#' y<-rnormhnorm(n=N, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s)
+#' dat<-data.frame(y, x1, x2, x3, x4, x5)
+#'
+#' #Write formulae for parameters
+#' mu_formula<-y~x1+x2+I(x2^2)+s(x3, bs="ps")
+#' sigma_v_formula<-~1+x4
+#' sigma_u_formula<-~1+s(x5, bs="ps")
+#'
+#' #Fit model
+#' model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#'                  data=dat, family=normhnorm(s=s), optimizer = c("efs"))
+#'
+#' #Model summary
+#' summary(model)
+#'
+#' #Smooth effects
+#' #Effect of x3 on the predictor of the production function
+#' plot(model, select=1) #Estimated function
+#' lines(x3[order(x3)], 6*log(x3[order(x3)]+2)^(1/4)-
+#'       mean(6*log(x3[order(x3)]+2)^(1/4)), col=2) #True effect
+#'
+#' #Effect of x5 on the predictor of the inefficiency
+#' plot(model, select=2) #Estimated function
+#' lines(x5[order(x5)], -1+sin(2*pi*x5)[order(x5)]-
+#'       mean(-1+sin(2*pi*x5)),col=2) #True effect
+#'
+#' #Estimate efficiency
+#' efficiency(model, type="jondrow")
+#' efficiency(model, type="battese")
+#'
+#' #Get elasticities
+#' elasticity(model)
 #'
 #' @references
 #' \itemize{

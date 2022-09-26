@@ -4,61 +4,65 @@
 \alias{dcop}
 \alias{pcop}
 \alias{rcop}
-\title{Copula distribution}
+\title{Copula function}
 \usage{
-dcop(
-  U,
-  Tau = 0,
-  family = 1,
-  deriv = 0,
-  disjoint = TRUE,
-  num = FALSE,
-  log.p = FALSE
-)
+dcop(W, delta, family_cop = "normal", log.p = FALSE, deriv = 0)
 
-pcop(U, Tau = 0, family = 1, log.p = FALSE)
+pcop(W, delta = 0, family_cop = "normal", log.p = FALSE)
 
-rcop(n, Tau = 0, family = 1)
+rcop(n, delta = 0, family_cop = "normal")
 }
 \arguments{
-\item{U}{matrix of pseudo observations. Must have two columns.}
+\item{W}{matrix of pseudo observations. Must have at least two columns.}
 
-\item{Tau}{matrix of Kendall's tau.}
+\item{delta}{matrix of copula parameter. Must have at least one column.}
 
-\item{family}{integer, defines the copula family:\cr
-\code{1} = Gaussian copula \cr}
+\item{family_cop}{string, defines the copula family:\cr
+\code{independent} = Independence copula \cr
+\code{normal} = Gaussian copula \cr
+\code{clayton} = Clayton copula \cr
+\code{gumbel} = Gumbel copula \cr
+\code{frank} = Frank copula \cr
+\code{joe} = Joe copula \cr}
 
-\item{deriv}{derivative of order \code{deriv} of the log density. Available are 1,2,3,4.}
+\item{log.p}{logical; if \code{TRUE}, probabilities p are given as \code{log(p)}.}
 
-\item{disjoint}{logical; if TRUE, only derivatives with respect to Tau are provided.}
-
-\item{num}{logical; if TRUE, numerical derivatives are provided.}
-
-\item{log.p}{logical; if TRUE, probabilities p are given as log(p).}
+\item{deriv}{derivative of order \code{deriv} of the log density. Available are \code{0},\code{2}.}
 
 \item{n}{number of observations.}
 }
 \value{
-\code{dcopula} gives the density, \code{pcop} gives the distribution function for a specified copula and \code{rcop} generates random numbers, with given Tau.
-If the derivatives are calculated these are provided as the attributes \code{gradient}, \code{hessian}, \code{l3} and \code{l4} of the output of the density.
+\code{dcop} gives the density, \code{pcop} gives the distribution function for a specified copula and \code{rcop} generates random numbers, with given delta.
+If the derivatives are calculated these are provided as the attributes \code{gradient}, \code{hessian} of the output of the density.
 }
 \description{
-Probablity density function and random number generation for the normal, frank and gumbel bivariate copula.
+Probablitiy density function, distribution and random number generation for copulas.
 }
 \details{
-For more than 2 dimensions only the gaussian copula is implemented. The functions \code{pcop} and \code{rcop} are wrapper functions for the \code{VineCopula} package.
+For more than 2 dimensions only the gaussian copula is implemented. The functions \code{pcop} and \code{rcop} are wrapper functions for 'copula' package.
+The functions \code{pcop} and \code{rcop} are wrapper functions for the \code{\link[copula:pCopula]{pCopula()}} and \code{\link[copula:rCopula]{rCopula()}}.
+Although the parameter space is larger in theory for some copulas, numeric under- and overflow limit the parameter space. The intervalls for the parameter \code{delta} are given as follows:
+\enumerate{
+\item  \code{independent}, min=0 and max=1
+\item  \code{normal}, min=-1 and max=1
+\item  \code{clayton}, min=1e-16 and max=28
+\item  \code{gumbel}, min=1 and max=17
+\item  \code{frank}, min=-35 and max=35
+\item  \code{joe}, min=1e-16 and max=30
+}
 }
 \section{Functions}{
 \itemize{
-\item \code{pcop()}: distribution function for the joint distribution.
+\item \code{pcop()}: distribution function for copula.
 
-\item \code{rcop()}: random number generation for the joint distribution.
+\item \code{rcop()}: random number generation for copula.
 
 }}
 \examples{
-pdf <- dcop(U=matrix(c(0.3,0.7), ncol=2), Tau=matrix(0.5,ncol=1), family=1)
-cdf <- pcop(U=matrix(c(0.3,0.7), ncol=2), Tau=matrix(0.5,ncol=1), family=1)
-r <- rcop(n=100, Tau=matrix(0.5,nrow=100), family=1)
+u=0.3; v=0.7; p=0.5
+pdf <- dcop(W=matrix(c(u,v), ncol=2), delta=matrix(p,ncol=1), family_cop="normal")
+cdf <- pcop(W=matrix(c(u,v), ncol=2), delta=matrix(p,ncol=1), family_cop="normal")
+r <- rcop(n=100, delta=matrix(p,nrow=100), family_cop="normal")
 
 }
 \references{

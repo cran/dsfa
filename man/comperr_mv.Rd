@@ -5,26 +5,26 @@
 \title{Composed error multivariate distribution object for mgcv}
 \usage{
 comperr_mv(
-  link = list("identity", "log", "log", "identity", "log", "log", "tanh"),
+  link = list("identity", "log", "log", "identity", "log", "log", "glogit"),
   s1 = -1,
   s2 = -1,
-  dist = c("normhnorm", "normhnorm", 1)
+  family_mv = c("normhnorm", "normhnorm", "normal")
 )
 }
 \arguments{
-\item{link}{seven item list specifying the link for the \eqn{\mu_1}, \eqn{\sigma_{V1}}, \eqn{\sigma_{U1}}, \eqn{\lambda_1}, \eqn{\mu_2}, \eqn{\sigma_{V2}}, \eqn{\sigma_{U2}}, \eqn{\lambda_2} and \eqn{\tau} parameters. See details.}
+\item{link}{seven item list specifying the link for the \eqn{\mu_1}, \eqn{\sigma_{V1}}, \eqn{\sigma_{U1}}, \eqn{\lambda_1}, \eqn{\mu_2}, \eqn{\sigma_{V2}}, \eqn{\sigma_{U2}}, \eqn{\lambda_2} and \eqn{\delta} parameters. See details.}
 
 \item{s1}{\eqn{s_1=-1} for production and \eqn{s_1=1} for cost function for margin 1.}
 
 \item{s2}{\eqn{s_2=-1} for production and \eqn{s_2=1} for cost function for margin 2.}
 
-\item{dist}{vector of length three, specifying the bivariate distribution.  First element is the name of the first marginal distribution. Second element is the name of the second marginal distribution. Third element specifies the copula. See \code{\link{dcop}} for more details.}
+\item{family_mv}{vector of length three, specifying the bivariate distribution.  First element is the name of the first marginal distribution. Second element is the name of the second marginal distribution. Third element specifies the copula. See \code{dcop()} for more details.}
 }
 \value{
 An object inheriting from class \code{general.family} of the 'mgcv' package, which can be used in the dsfa package.
 }
 \description{
-The comperr_mv family implements the composed error multivariate distribution in which the \eqn{\mu_1}, \eqn{\sigma_{V1}}, \eqn{\sigma_{U1}}, (or \eqn{\lambda_1}), \eqn{\mu_2}, \eqn{\sigma_{V2}}, \eqn{\sigma_{U2}}, (or \eqn{\lambda_2}) and \eqn{\tau} can depend on additive predictors. Useable only with \code{mgcv::gam}, the additive predictors are specified via a list of formulae.
+The comperr_mv family implements the composed error multivariate distribution in which the \eqn{\mu_1}, \eqn{\sigma_{V1}}, \eqn{\sigma_{U1}}, (or \eqn{\lambda_1}), \eqn{\mu_2}, \eqn{\sigma_{V2}}, \eqn{\sigma_{U2}}, (or \eqn{\lambda_2}) and \eqn{\delta} can depend on additive predictors. Useable only with \code{\link[mgcv:gam]{gam()}}, the additive predictors are specified via a list of formulae.
 }
 \details{
 Used with gam to fit distributional stochastic frontier model. The function \code{gam} is from the mgcv package is called with a list containing seven formulae:
@@ -35,9 +35,9 @@ Used with gam to fit distributional stochastic frontier model. The function \cod
 \item The fourth formula specifies the response of margin 2 on the left hand side and the structure of the additive predictor for \eqn{\mu_2} parameter on the right hand side. Link function is "identity".
 \item The fifth formula is one sided, specifying the additive predictor for the  \eqn{\sigma_{V2}} on the right hand side. Link function is "log".
 \item The sixth formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_{U2}} or \eqn{\lambda_2} on the right hand side. Link function is "log".
-\item The seventh formula  is one sided, specifying the additive predictor for the  \eqn{\tau} on the right hand side. Link function is "tanh".
+\item The seventh formula  is one sided, specifying the additive predictor for the  \eqn{\delta} on the right hand side. Link function is "glogit".
 }
-The fitted values and linear predictors for this family will be seven column matrices. The first column is the \eqn{\mu_1}, the second column is the \eqn{\sigma_{V1}}, the third column is \eqn{\sigma_{U1}}...
+The fitted values and linear predictors for this family will be seven column matrices. The columns correspond with the order of the formulae for the parameters.
 }
 \examples{
 \donttest{
@@ -58,13 +58,13 @@ sigma_u1=exp(-1+1.25*x3) #inefficiency parameter 1
 mu2=3+2*x4 #cost function parameter 2
 sigma_v2=exp(-1.5+0.75*x5) #noise parameter 2
 sigma_u2=exp(-1+.75*x6) #inefficiency parameter 2
-Tau<-(exp(1+2.5*x7)-1)/(exp(1+2.5*x7)+1) #Kendall's tau
+delta<-(exp(1+2.5*x7)-1)/(exp(1+2.5*x7)+1) #delta
 
 #Simulate responses and create dataset
 Y<-rcomperr_mv(n=N,
-               mu1=mu1, sigma_v1=sigma_v1, par_u1 = sigma_u1, s1=s1, dist1="normhnorm",
-               mu2=mu2, sigma_v2=sigma_v2, par_u2 = sigma_u2, s2=s2, dist2="normhnorm",
-               Tau=Tau, family=1)
+               mu1=mu1, sigma_v1=sigma_v1, par_u1 = sigma_u1, s1=s1,
+               mu2=mu2, sigma_v2=sigma_v2, par_u2 = sigma_u2, s2=s2,
+               delta=delta, family=c("normhnorm","normhnorm","normal"))
 dat<-data.frame(y1=Y[,1],y2=Y[,2], x1, x2, x3, x4, x5, x6, x7)
 
 #Write formulae for parameters
@@ -74,13 +74,14 @@ sigma_u1_formula<-~x3
 mu_2_formula<-y2~x4
 sigma_v2_formula<-~x5
 sigma_u2_formula<-~x6
-tau_formula<-~x7
+delta_formula<-~x7
 
 #Fit model
 model<-mgcv::gam(formula=list(mu_1_formula,sigma_v1_formula,sigma_u1_formula,
                               mu_2_formula,sigma_v2_formula,sigma_u2_formula,
-                              tau_formula),
-                 data=dat, family=comperr_mv(s1=s1, s2=s2, dist=c("normhnorm","normhnorm",1)),
+                              delta_formula),
+                 data=dat,
+                 family=comperr_mv(s1=s1, s2=s2, family_mv=c("normhnorm","normhnorm","normal")),
                  optimizer="efs")
 
 #Model summary
