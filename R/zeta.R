@@ -43,19 +43,6 @@ zeta<-function (x, deriv=0) {
     }
   }
 
-
-
-  #
-  # z <- switch(k + 1,
-  #             stats::pnorm(x, log.p = TRUE) + log(2),
-  #             ifelse(x > (-50), exp(stats::stats::dnorm(x, log = TRUE) - stats::pnorm(x, log.p = TRUE)),
-  #             -x/(1 - 1/(x2 + 2) + 1/((x2 + 2) * (x2 + 4)) - 5/((x2 + 2) * (x2 + 4) * (x2 + 6)) + 9/((x2 + 2) * (x2 + 4) *
-  #   (x2 + 6) * (x2 + 8)) - 129/((x2 + 2) * (x2 + 4) *
-  #    (x2 + 6) * (x2 + 8) * (x2 + 10)))),
-  #   (-zeta(1, x) * (x + zeta(1, x))),
-  #   (-zeta(2, x) * (x + zeta(1, x)) - zeta(1, x) * (1 + zeta(2, x))), (-zeta(3, x) * (x + 2 * zeta(1, x)) - 2 * zeta(2, x) * (1 + zeta(2, x))), (-zeta(4, x) * (x + 2 * zeta(1, x)) - zeta(3, x) * (3 + 4 * zeta(2, x)) - 2 * zeta(2, x) * zeta(3, x)), NULL)
-
-
   neg.inf <- (x == -Inf)
   if (any(neg.inf)){
     if(deriv>0){
@@ -67,13 +54,7 @@ zeta<-function (x, deriv=0) {
       }
     }
   }
-    # z <- switch(k + 1,
-    #             z,
-    #             replace(z, neg.inf, Inf),
-    #             replace(z, neg.inf, -1),
-    #             replace(z, neg.inf, 0),
-    #             replace(z, neg.inf, 0),
-    #             replace(z, neg.inf, 0), NULL)
+
   if(deriv>0){
     attr(out,"gradient")<-replace(attr(out,"gradient"), x == Inf, 0)
     attr(out,"hessian")<-replace(attr(out,"hessian"), x == Inf, 0)
@@ -83,10 +64,7 @@ zeta<-function (x, deriv=0) {
     }
   }
 
-  # if (k > 1)
-  #   z <- replace(z, x == Inf, 0)
   replace(out, na, NA)
-  # replace(z, na, NA)
 
   #Return
   return(out)

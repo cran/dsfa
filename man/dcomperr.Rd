@@ -18,7 +18,8 @@ dcomperr(
   family = "normhnorm",
   deriv = 0,
   tri = NULL,
-  log.p = FALSE
+  log.p = FALSE,
+  check = TRUE
 )
 
 pcomperr(
@@ -31,7 +32,8 @@ pcomperr(
   deriv = 0,
   tri = NULL,
   lower.tail = TRUE,
-  log.p = FALSE
+  log.p = FALSE,
+  check = TRUE
 )
 
 qcomperr(
@@ -42,10 +44,19 @@ qcomperr(
   s = -1,
   family = "normhnorm",
   lower.tail = TRUE,
-  log.p = FALSE
+  log.p = FALSE,
+  check = TRUE
 )
 
-rcomperr(n, mu = 0, sigma_v = 1, par_u = 1, s = -1, family = "normhnorm")
+rcomperr(
+  n,
+  mu = 0,
+  sigma_v = 1,
+  par_u = 1,
+  s = -1,
+  family = "normhnorm",
+  check = TRUE
+)
 }
 \arguments{
 \item{x}{vector of quantiles.}
@@ -66,6 +77,8 @@ rcomperr(n, mu = 0, sigma_v = 1, par_u = 1, s = -1, family = "normhnorm")
 
 \item{log.p}{logical; if \code{TRUE}, probabilities p are given as \code{log(p)}.}
 
+\item{check}{logical; if TRUE, check inputs.}
+
 \item{q}{vector of quantiles.}
 
 \item{lower.tail}{logical; if TRUE (default), probabilities are \eqn{P[X \le x]}  otherwise, \eqn{P[X > x]}.}
@@ -78,7 +91,7 @@ rcomperr(n, mu = 0, sigma_v = 1, par_u = 1, s = -1, family = "normhnorm")
 \code{dcomperr} gives the density, \code{pcomperr} gives the distribution function, \code{qcomperr} gives the quantile function, and \code{rcomperr} generates random numbers, with given parameters. If the derivatives are calculated these are provided as the attributes \code{gradient}, \code{hessian}, \code{l3} and \code{l4} of the output of the density.
 }
 \description{
-Probablitiy density function, distribution, quantile function and random number generation for the composed error term distribution.
+Probablitiy density, distribution, quantile function and random number generation for the composed error term distribution.
 }
 \details{
 This is wrapper function for the normal-halfnormal and normal-exponential distribution. A random variable \eqn{\mathcal{E}} follows a composed error distribution if \eqn{\mathcal{E} = V + s \cdot U }, where \eqn{V \sim N(\mu, \sigma_V^2)} and \eqn{U \sim HN(0,\sigma_U^2)} or \eqn{U \sim Exp(0,\sigma_U^2)}.

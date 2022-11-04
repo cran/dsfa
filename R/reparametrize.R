@@ -1,18 +1,12 @@
 #' reparametrize
 #'
-#' Transforms the given inputs to the parameters and the first three moments of the corresponding distribution. For the normal-halfnormal distribution the parametrization of the classical stochastic frontier as well as the skew-normal and centred skew-normal specification ar provided. For the normal-exponential an the specification via \eqn{\lambda} and \eqn{\nu} are available.
+#' Transforms the given inputs to the parameters and the first three moments of the corresponding distribution. For the normal-halfnormal distribution the parametrization of the classical stochastic frontier as well as the skew-normal and centred skew-normal specification ar provided. For the normal-exponential an the specification via \eqn{\lambda} is available.
 #'
 #' @param mu vector of \eqn{\mu}
 #' @param sigma_v vector of \eqn{\sigma_V}. Must be positive.
 #' @param sigma_u vector of \eqn{\sigma_U}. Must be positive.
 #' @param s \eqn{s=-1} for production and \eqn{s=1} for cost function.
 #' @param lambda vector of \eqn{\lambda}. Must be positive.
-#' @param nu vector defined as \eqn{\nu = \frac{1}{\lambda}}. Must be positive.
-#' @param xi vector of location parameters of the skew-normal distribution defined as \eqn{\xi=\mu}
-#' @param omega vector of scale parameters of the skew-normal distribution defined as \eqn{\omega=\sigma}. Must be positive.
-#' @param alpha vector of slant parameters of the skew-normal distribution defined as \eqn{\alpha=s \lambda}.
-#' @param delta vector of slant parameters rescaled \eqn{\frac{\alpha}{\sqrt{1+\alpha^2}}}. Must be within \eqn{(-1,1)}.
-#' @param tau vector of the inverted scale parameters of the skew-normal distribution, e.g. \eqn{\tau = \frac{1}{\omega}}. Must be positive.
 #' @param mean vector of mean of \eqn{\mathcal{E}}
 #' @param sd vector of standard deviation of \eqn{\mathcal{E}}. Must be positive.
 #' @param skew  vector of skewness of \eqn{\mathcal{E}}.
@@ -23,16 +17,11 @@
 #' @details The following input combinations are allowed for the normal-halfnormal distribution
 #' \itemize{
 #'   \item \code{mu}, \code{sigma_v}, \code{sigma_u}, \code{s}
-#'   \item \code{xi}, \code{omega}, \code{alpha}
-#'   \item \code{xi}, \code{tau}, \code{alpha}
-#'   \item \code{xi}, \code{omega}, \code{delta}
-#'   \item \code{xi}, \code{tau}, \code{delta}
-#'   \item \code{mean}, \code{sd}, \code{skew}, \code{family="normhnorm"}    \eqn{\qquad,}
+#'   \item \code{mean}, \code{sd}, \code{skew}, \code{family="normhnorm"}  with optional \code{s}  \eqn{\qquad,}
 #' } while for the normal-exponential distribution the feasible inputs are
 #' \itemize{
 #'   \item \code{mu}, \code{sigma_v}, \code{lambda}, \code{s}
-#'   \item \code{mu}, \code{sigma_v}, \code{nu}, \code{s}
-#'   \item \code{mean}, \code{sd}, \code{skew}, \code{family="normexp"} \eqn{\qquad.}
+#'   \item \code{mean}, \code{sd}, \code{skew}, \code{family="normexp"} with optional \code{s} \eqn{\qquad.}
 #' } Other input combinations are not feasible.
 #'
 #' @examples
@@ -53,9 +42,8 @@
 #' @export
 
 reparametrize<-function(mu=NULL, sigma_v=NULL, sigma_u=NULL, s=NULL,
-                        lambda=NULL, nu=NULL,
-                        xi=NULL, omega=NULL, alpha=NULL, delta=NULL, tau=NULL,
-                        mean=NULL, sd=NULL, skew=NULL, par_u=NULL, family=NULL){
+                        lambda=NULL, par_u=NULL,
+                        mean=NULL, sd=NULL, skew=NULL, family=NULL){
   out<-NULL
 
   if(is.null(family)){
@@ -66,7 +54,7 @@ reparametrize<-function(mu=NULL, sigma_v=NULL, sigma_u=NULL, s=NULL,
      sigma_u<-par_u
   }
 
-  if(family=="normhnorm"|!is.null(sigma_u)|!is.null(xi)|!is.null(omega)|!is.null(alpha)|!is.null(delta)|!is.null(tau)){
+  if(family=="normhnorm"|!is.null(sigma_u)){
     #Function which transforms parameters
     #Inputs a vector of either
     #1) mean, sd, skew (csn parametrization)
@@ -100,41 +88,6 @@ reparametrize<-function(mu=NULL, sigma_v=NULL, sigma_u=NULL, s=NULL,
       omega<-sd/sqrt(1-b^2*delta^2)
       xi<-mean-b*omega*delta
       tau<-1/omega
-    }
-
-    # #sf 2 sf stabilized
-    # if(is.numeric(sigma_v) & is.numeric(sigma_u)){
-    #   if(any(sigma_v<=0)|any(sigma_u<=0)){
-    #     stop(paste("sigma_v and sigma_u must be positive", "\n", ""))
-    #   }
-    #   sigma<-sqrt(sigma_v^2+sigma_u^2)
-    #   lambda<-sigma_u/sigma_v
-    # }
-
-    #tau 2 omega
-    if(is.numeric(tau)){
-      if (any(tau <= 0)){
-        stop(paste("tau must be positive", "\n", ""))
-      }
-      omega<-1/tau
-    }
-
-    # #sf stabilized 2 sn
-    # if(is.numeric(mu) & is.numeric(omega) & is.numeric(lambda) & is.numeric(s)){
-    #   if(any(sigma <= 0)|any(lambda <= 0)){
-    #     stop(paste("sigma and lambda must be positive", "\n", ""))
-    #   }
-    #   alpha<-s*lambda
-    #   omega<-sigma
-    #   xi<-mu
-    # }
-
-    #delta 2 alpha
-    if(is.numeric(delta)){
-      if (any(delta<=-1 & delta>=1)){
-        stop(paste("delta must be in (-1,1)", "\n", ""))
-      }
-      alpha<-delta/sqrt(1-delta^2)
     }
 
     #sf 2 sn
@@ -181,15 +134,15 @@ reparametrize<-function(mu=NULL, sigma_v=NULL, sigma_u=NULL, s=NULL,
 
     #Return output dataframe
     out<-data.frame(mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s,
-                    xi=xi, omega=omega, alpha=alpha, delta=delta, tau=tau,
-                    mean=mean, sd=sd, skew=skew, par_u=sigma_u)
+                    xi=xi, omega=omega, alpha=alpha, delta=delta, par_u=sigma_u,
+                    mean=mean, sd=sd, skew=skew)
   }
 
   if(family=="normexp"&!is.null(par_u)){
     lambda<-par_u
   }
 
-  if(family=="normexp"|!is.null(lambda)|!is.null(nu)){
+  if(family=="normexp"|!is.null(lambda)){
 
     if(is.numeric(mean) & is.numeric(sd) & is.numeric(skew)){
       if(is.null(s)){
@@ -212,14 +165,6 @@ reparametrize<-function(mu=NULL, sigma_v=NULL, sigma_u=NULL, s=NULL,
       nu<-1/lambda
       # s<-sign(sum(mu))
     } else {
-      #nu 2 lambda
-      if(is.numeric(nu)){
-        if (any(nu <= 0)){
-          stop(paste("nu must be positive", "\n", ""))
-        }
-        lambda<-1/nu
-      }
-
       if(is.numeric(mu) & is.numeric(sigma_v) & is.numeric(lambda) & is.numeric(s)){
           #mu<-s*mu
           mean<-mu+s*1/lambda
@@ -227,20 +172,15 @@ reparametrize<-function(mu=NULL, sigma_v=NULL, sigma_u=NULL, s=NULL,
           skew<-2/(sigma_v^3*s^3*lambda^3)*(1+1/(sigma_v^2*lambda^2))^(-3/2)
       }
 
-      if(is.null(nu)){
-        nu<-1/lambda
-      }
       #Check if inputs are correct
       if(!(is.numeric(mu) & is.numeric(sigma_v) & is.numeric(lambda))){
         stop("Incorrect inputs for the normexp distribution")
       }
     }
 
-
-
     out<-data.frame(mu=mu, sigma_v=sigma_v, lambda=lambda, s=s,
-                    nu=nu,
-                    mean=mean, sd=sd, skew=skew, par_u=lambda)
+                    par_u=lambda,
+                    mean=mean, sd=sd, skew=skew)
   }
 
   if(is.null(out)){

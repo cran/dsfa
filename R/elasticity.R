@@ -55,7 +55,7 @@
 elasticity<-function(object, select=NULL, plot=TRUE, se=TRUE){
   #Calculates the elasticity of the inputs.
   #If no select is provided elasticity for all non-parametric terms is returned.
-  if(object$family$family=="joint"){
+  if(object$family$family=="comperr_mv"){
     par_index<-c(attr(object$nsdf,"pstart")[1]:attr(object$nsdf,"pstart")[2], attr(object$nsdf,"pstart")[4]:attr(object$nsdf,"pstart")[5])
   } else {
     par_index<-attr(object$nsdf,"pstart")[1]:attr(object$nsdf,"pstart")[2]

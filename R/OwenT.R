@@ -15,7 +15,7 @@
 #'
 #'
 #' @examples
-#' OwenT(x=1, a=1, jmax = 50, cut.point = 8, deriv=0)
+#' OwenT(x=1, a=1, jmax = 50, cut.point = 8, deriv=2)
 #'
 #' @references
 #' \itemize{
@@ -24,7 +24,33 @@
 #' @export
 #'
 #OwenT
-OwenT<-base::Vectorize(function (x, a, jmax = 50, cut.point = 8, deriv=0){
+OwenT<-function (x, a, jmax = 50, cut.point = 8, deriv=0){
+
+  out<-OwenT_vec(x=x, a=a, jmax = jmax, cut.point = cut.point)
+
+  if(deriv>0){
+    gradient<-matrix(0,ncol=2,nrow=length(x))
+    hessian<-matrix(0,ncol=4,nrow=length(x))
+
+    #First derivatives of -2*T.Owen wrt x, a
+    gradient[,1]<-stats::dnorm(x)*erf(a*x/sqrt(2)) #(exp(-(x^2/2)) * erf((a* x)/sqrt(2)))/sqrt(2 * pi)
+    gradient[,2]<--(exp(-(1/2)* (1 + a^2) *x^2)/((1 + a^2) * pi))
+
+    #Second derivatives of -2*T.Owen wrt x, a
+    hessian[,1]<-(exp(-(x^2/2))* (2 * a *exp(-(1/2) * a^2 * x^2) - sqrt(2*pi) * x * erf((a *x)/sqrt(2))))/(2*pi)
+    hessian[,2]<-(exp(-(1/2) * (1 + a^2) * x^2) * x)/pi
+    hessian[,3]<-(a *exp(-(1/2) * (1 + a^2) * x^2) * (2 + (1 + a^2) * x^2))/((1 + a^2)^2 *pi)
+
+    attr(out,"gradient")<--1/2*gradient
+    attr(out,"hessian")<--1/2*hessian
+  }
+
+  return(out)
+}
+
+#' @describeIn OwenT Vectorized OwenT function without derivatives.
+#' @export
+OwenT_vec<-base::Vectorize(function (x, a, jmax = 50, cut.point = 8){
   T.int <- function(x, a, jmax, cut.point) {
     fui <- function(x, i) (x^(2 * i))/((2^i) * gamma(i +
                                                        1))
@@ -75,16 +101,7 @@ OwenT<-base::Vectorize(function (x, a, jmax = 50, cut.point = 8, deriv=0){
   owen <- replace(owen, inf, 0)
   out<-owen * sign(a)
 
-  if(deriv>0){
-    gradient<-matrix(0,ncol=2,nrow=length(x))
-    hessian<-matrix(0,ncol=4,nrow=length(x))
-
-    attr(out,"gradient")<-gradient
-    attr(out,"hessian")<-hessian
-  }
-
   #Return out
   return(out)
 }, vectorize.args=c("x","a"))
-
 

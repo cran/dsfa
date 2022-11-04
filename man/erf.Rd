@@ -5,8 +5,8 @@
 \alias{erfc}
 \alias{erfinv}
 \alias{erfcinv}
-\alias{d1qnormdx1}
-\alias{d2qnormdx2}
+\alias{pnorm}
+\alias{qnorm}
 \title{erf function}
 \usage{
 erf(x)
@@ -17,12 +17,26 @@ erfinv(x)
 
 erfcinv(x)
 
-d1qnormdx1(x)
+pnorm(q, mean = 0, sd = 1, deriv = 0, log.p = FALSE, lower.tail = TRUE)
 
-d2qnormdx2(x)
+qnorm(p, mean = 0, sd = 1, deriv = 0, log.p = FALSE, lower.tail = TRUE)
 }
 \arguments{
 \item{x}{vector of quantiles.}
+
+\item{q}{vector of quantiles.}
+
+\item{mean}{vector of means.}
+
+\item{sd}{vector of standard deviations.}
+
+\item{deriv}{derivative of order \code{deriv}. Available are \code{0} and \code{2}.}
+
+\item{log.p}{logical; if TRUE, probabilities p are given as log(p).}
+
+\item{lower.tail}{logical; if TRUE (default), probabilities are \eqn{P[X \le x]}  otherwise, \eqn{P[X > x]}.}
+
+\item{p}{vector of probabilites.}
 }
 \value{
 Returns a vector of the corresponding function evaluated at x.
@@ -32,9 +46,8 @@ Error function, complementary error function, inverse error function,inverse com
 }
 \details{
 \code{erf} is the error function. \code{erfc} is the complementary error function.
-\code{erfinv} is the inverse error function and and \code{erfcinv} is the inverse complementary error function.
-\code{d1qnormdx1} evaluates the first derivative of quantile function of the standard normal distribution w.r.t. \code{x}.
-\code{d2qnormdx2} evaluates the second derivative of quantile function of the standard normal distribution w.r.t. \code{x}.
+\code{erfinv} is the inverse error function and and \code{erfcinv} is the inverse complementary error function. \code{pnorm} and \code{qnorm} are clones from
+the \code{stats} package, but do have the argument for derivatives.
 }
 \section{Functions}{
 \itemize{
@@ -44,9 +57,9 @@ Error function, complementary error function, inverse error function,inverse com
 
 \item \code{erfcinv()}: inverse complementary error function
 
-\item \code{d1qnormdx1()}: First derivative of quantile function of the standard normal distribution
+\item \code{pnorm()}: Distribution function of the standard normal distribution with derivatives.
 
-\item \code{d2qnormdx2()}: Second derivative of quantile function of the standard normal distribution
+\item \code{qnorm()}: Quantile function of the standard normal distribution with derivatives.
 
 }}
 \examples{
@@ -54,8 +67,8 @@ erf(0.5)
 erfc(0.5)
 erfinv(0.5)
 erfcinv(0.5)
-d1qnormdx1(0.5)
-d2qnormdx2(0.5)
+
+qnorm(0.5, deriv=2)
+pnorm(0.5, deriv=2)
 
 }
-\keyword{internal}

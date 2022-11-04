@@ -139,7 +139,7 @@ normhnorm <- function(link = list("identity", "log", "log"), s = -1){
     sigma_u <- family$linfo[[3]]$linkinv( eta2 )
     s       <- family$s
     ##Define parameters
-    l0<-dnormhnorm(x=y, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s, deriv=4, tri=family$tri, log.p = TRUE)
+    l0<-dnormhnorm(x=y, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s, deriv=4, tri=family$tri, log.p = TRUE, check=FALSE)
 
     l<-sum(l0)
 
@@ -214,10 +214,14 @@ normhnorm <- function(link = list("identity", "log", "log"), s = -1){
       qr.x_all<-qr(x[,-which(duplicated(colnames(x))), drop=FALSE])
 
       s<-family$s
+      # para<-reparametrize(mean = qr.fitted(qr.x_all, y),
+      #                       sd = abs(qr.fitted(qr.x_all, abs(qr.resid(qr.x_all, y)))),#sqrt(sum(qr.resid(qr.x_all, y)^2)/nrow(x1)),
+      #                     skew = qr.fitted(qr.x_all, qr.resid(qr.x_all, y)^3), family="normhnorm", s=s)
       para<-reparametrize(mean = qr.fitted(qr.x_all, y),
-                            sd = abs(qr.fitted(qr.x_all, abs(qr.resid(qr.x_all, y)))),#sqrt(sum(qr.resid(qr.x_all, y)^2)/nrow(x1)),
-                          skew = qr.fitted(qr.x_all, qr.resid(qr.x_all, y)^3), family="normhnorm", s=s)
-
+                    sd = abs(qr.resid(qr.x_all, y)),#sqrt(sum(qr.resid(qr.x_all, y)^2)/nrow(x1)),
+                    skew = rep((sum((y - mean(y))^3)/length(y))/(sum((y - mean(y))^2)/length(y))^(3/2),length(y)),
+                    family="normhnorm", s=s)
+      # aa<<-list(para=para, qr.x_all=qr.x_all, y=y)
       yt1<-para$mu
 
       # 1) Ridge regression for the location parameter
@@ -254,30 +258,30 @@ normhnorm <- function(link = list("identity", "log", "log"), s = -1){
   }) ## initialize
 
   #Random number generation for normhnorm
-  rd <- function(mu, wt, scale, s) {
+  rd <- function(mu, wt, scale) {
     ## random number generation
     mu <- as.matrix(mu)
     if(ncol(mu)==1){ mu <- t(mu) }
 
-    return(rnormhnorm(n=nrow(mu), mu = mu[,1], sigma_v = mu[,2], sigma_u = mu[,3], s=s))
+    return(rnormhnorm(n=nrow(mu), mu = mu[,1], sigma_v = mu[,2], sigma_u = mu[,3], s=attr(mu,"s")))
   } ## random number generation
 
   #Quantile function of normhnorm
-  qf <- function(p, mu, wt, scale, s) {
+  qf <- function(p, mu, wt, scale) {
     ##quantile function
     mu <- as.matrix(mu)
     if(ncol(mu)==1){ mu <- t(mu) }
 
-    return(qnormhnorm(p=p, mu = mu[,1], sigma_v = mu[,2], sigma_u = mu[,3], s=s))
+    return(qnormhnorm(p=p, mu = mu[,1], sigma_v = mu[,2], sigma_u = mu[,3], s=attr(mu,"s")))
   } ##quantile function
 
   #Cumulative distribution function of normhnorm
-  cdf <- function(q, mu, wt, scale, logp, s) {
+  cdf <- function(q, mu, wt, scale) {
     ##cumulative distribution function
     mu <- as.matrix(mu)
     if(ncol(mu)==1){ mu <- t(mu) }
 
-    return(pnormhnorm(q=q, mu = mu[,1], sigma_v = mu[,2], sigma_u = mu[,3], s=s, log.p = logp))
+    return(pnormhnorm(q=q, mu = mu[,1], sigma_v = mu[,2], sigma_u = mu[,3], s=attr(mu,"s")))
   } ##cumulative distribution function
 
   #Prediction function
@@ -324,6 +328,11 @@ normhnorm <- function(link = list("identity", "log", "log"), s = -1){
     }
   } ##predict
 
+  postproc <- expression({
+    attr(object$fitted.values,"s")<-object$family$s
+    object$fitted.values
+  })
+
   structure(list(family="normhnorm",ll=ll, link=paste(link), nlp=npar,
                  tri = mgcv::trind.generator(npar), ## symmetric indices for accessing derivative arrays
                  initialize=initialize,
@@ -333,6 +342,7 @@ normhnorm <- function(link = list("identity", "log", "log"), s = -1){
                  qf=qf,
                  cdf=cdf,
                  predict=predict,
+                 postproc=postproc,
                  linfo = stats, ## link information list
                  d2link=1, d3link=1, d4link=1, ## signals to fix.family.link that all done
                  ls=1, ## signals that ls not needed here

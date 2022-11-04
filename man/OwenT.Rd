@@ -2,9 +2,12 @@
 % Please edit documentation in R/OwenT.R
 \name{OwenT}
 \alias{OwenT}
+\alias{OwenT_vec}
 \title{OwenT}
 \usage{
 OwenT(x, a, jmax = 50, cut.point = 8, deriv = 0)
+
+OwenT_vec(x, a, jmax = 50, cut.point = 8)
 }
 \arguments{
 \item{x}{numeric vector of quantiles. Missing values (NAs) and Inf are allowed.}
@@ -27,8 +30,13 @@ Evaluates the Owen T-function
 The OwenT function is defined as \deqn{T(x,a)=\frac{1}{2 \pi} \int_0^{a} \frac{\exp\{-x^2 (1+t^2)/2 \}}{1+t^2} d t}. If \code{a}>1 and 0<\code{x}<=\code{cut.point}, a series expansion is used, truncated after \code{jmax} terms. If \code{a}>1 and \code{x}>\code{cut.point},
 an asymptotic approximation is used. In the other cases, various reflection properties of the function are exploited. For \code{deriv}=0, the function is a clone of \code{\link[sn:T.Owen]{T.Owen}}.
 }
+\section{Functions}{
+\itemize{
+\item \code{OwenT_vec()}: Vectorized OwenT function without derivatives.
+
+}}
 \examples{
-OwenT(x=1, a=1, jmax = 50, cut.point = 8, deriv=0)
+OwenT(x=1, a=1, jmax = 50, cut.point = 8, deriv=2)
 
 }
 \references{

@@ -18,6 +18,9 @@
 #' attr(x,"gradient")<-2
 #' x<-remove_attr(x)
 #'
+#' x<-matrix(c(-Inf, Inf, rnorm(10,0,10)),ncol=1)
+#' outlier_correct(x)
+#'
 #' @export
 #' @keywords internal
 pos_eigen<-function(H){
@@ -59,3 +62,28 @@ remove_attr<-function(object){
   unlist(lapply(object, function(x) { attributes(x) <- NULL; x }))
 }
 
+#' @describeIn pos_eigen Correct -Inf, Inf, NaN, NA and outliers im vector
+#' @param x vector
+#' @export
+#' @keywords internal
+outlier_correct_column<- function(x){
+  x_fin<-x[is.finite(x)]
+  x[x==Inf]<-max(x_fin)
+  x[x==-Inf]<-min(x_fin)
+  x[is.na(x)]<-stats::quantile(x_fin, probs=0.5, na.rm=TRUE)
+  quant<-stats::quantile(x, c(0.25,0.75))
+  iqr<-(quant[2]-quant[1])
+  x[x<= (-3*iqr+quant[1])] <- (-1.5*iqr+quant[1])
+  x[x>= (3*iqr+quant[2])] <- (1.5*iqr+quant[2])
+  # x[x<=quant[1] & x<= -1000] <- quant[1]
+  # x[x>=quant[2] & x>= 1000] <- quant[2]
+  x
+}
+
+#' @describeIn pos_eigen Correct -Inf, Inf, NaN, NA and outliers in matrix
+#' @param X matrix
+#' @export
+#' @keywords internal
+outlier_correct<-function(X){
+  matrix(apply(X,2,outlier_correct_column), ncol=ncol(X), nrow=nrow(X))
+}

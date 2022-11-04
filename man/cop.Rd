@@ -27,16 +27,15 @@ The cop family implements multiple copula distributions in which the \eqn{\delta
 }
 \details{
 Internal function. Used with gam to fit copula model, which in turn is used for starting values. The function \code{gam} is from the mgcv package is called with a formula.
-The formula specifies the a dummy on the left hand side and the structure of the additive predictor for \eqn{\delta} parameter on the right hand side. Link function is "generalized logit".
-\eqn{glogit(\eta)=log((-min+mu)/(max-mu))} where for each family_cop argument there are specific \code{min} and \code{max} arguments, which are the boundaries of the parameter space. Although the parameter space is
+The formula specifies the a dummy on the left hand side and the structure of the additive predictor for \eqn{\delta} parameter on the right hand side. Link function is "generalized logit", where for each family_cop argument there are specific \code{a} and \code{b} arguments, which are the boundaries of the parameter space. Although the parameter space is
 larger in theory, numeric under- and overflow limit the parameter space.
 \enumerate{
-\item  \code{independent}, min=0 and max=1
-\item  \code{normal}, min=-1 and max=1
-\item  \code{clayton}, min=1e-16 and max=28
-\item  \code{gumbel}, min=1 and max=17
-\item  \code{frank}, min=-35 and max=35
-\item  \code{joe}, min=1e-16 and max=30
+\item  \code{independent}, a=0 and b=1
+\item  \code{normal}, a=-1 and b=1
+\item  \code{clayton}, a=1e-16 and b=28
+\item  \code{gumbel}, a=1 and b=17
+\item  \code{frank}, a=-35 and b=35
+\item  \code{joe}, a=1e-16 and b=30
 }
 }
 \examples{
@@ -45,7 +44,7 @@ set.seed(1337)
 N=1000 #Sample size
 x1<-runif(N,-1,1)
 eta<-1+2.5*x1
-delta<-(exp(eta)-1)/(exp(eta)+1)
+delta<-rsp(x=eta, link="glogit", a=-1, b=1)
 dat<-as.data.frame(rcop(n=N, delta=delta, family="normal"))
 dat$y<-1
 model<-mgcv::gam(y~x1, data=dat,

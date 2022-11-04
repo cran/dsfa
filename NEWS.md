@@ -3,6 +3,39 @@
 *** denotes really big changes 
 inp "x" -> inp "y" denotes that input argument x has changed to input argument y
 
+## known issues
+* Frank copula esimtation numerically unstable and thus deactivated
+
+* qnormexp does not work for s=-1
+
+
+## version 1.0.1
+* Added rsp function (inverse link function)
+
+* Added pnorm and qnorm functions which handle like the base R function but allow for the derivatives 0 and 2.
+
+* OwenT function has now the option for deriv = 2.
+
+* Added function "check_arguments" to check input arguments for pdf, cdf, quantile function and random number generation of normhnorm and normexp.
+
+** Rewrote "chainrule" function such that the output is a vector with attributes "gradient", "hessian", "l3" and "l4" to be more consistent with the other functions. Further input
+   g can be a list now.
+
+* normexp and normhnorm can now take values of the parameters (mu, sigma_v, sigma_u, lambda) which differ in length from x,p,q,n. They are recycled to the appropriate length.
+
+* Added functions "outlier_correct_column" and "outlier_correct" in "utility_functions" which are used to make the calculation of the gradient and hessian of copula more stable.
+
+* Correct loglike of "joe" copula
+
+* Simplified inputs for reparametrize.
+
+* Added postproc for normexp_mgcv, normhnorm_mgcv and comperr_mv_mgcv to add attribute "s" to predicted values, such that qq.gam can now access information on s
+
+* Bivariate normal copula compuation is now faster
+
+* normexp_mgcv, normhnorm_mgcv and comperr_mv_mgcv have now simplified starting values
+
+
 ## version 1.0.0
 *** inp"xg" -> inp "tri" in all functions, to be consistent with 'mgcv'
 

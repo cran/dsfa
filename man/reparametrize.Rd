@@ -10,16 +10,10 @@ reparametrize(
   sigma_u = NULL,
   s = NULL,
   lambda = NULL,
-  nu = NULL,
-  xi = NULL,
-  omega = NULL,
-  alpha = NULL,
-  delta = NULL,
-  tau = NULL,
+  par_u = NULL,
   mean = NULL,
   sd = NULL,
   skew = NULL,
-  par_u = NULL,
   family = NULL
 )
 }
@@ -34,17 +28,7 @@ reparametrize(
 
 \item{lambda}{vector of \eqn{\lambda}. Must be positive.}
 
-\item{nu}{vector defined as \eqn{\nu = \frac{1}{\lambda}}. Must be positive.}
-
-\item{xi}{vector of location parameters of the skew-normal distribution defined as \eqn{\xi=\mu}}
-
-\item{omega}{vector of scale parameters of the skew-normal distribution defined as \eqn{\omega=\sigma}. Must be positive.}
-
-\item{alpha}{vector of slant parameters of the skew-normal distribution defined as \eqn{\alpha=s \lambda}.}
-
-\item{delta}{vector of slant parameters rescaled \eqn{\frac{\alpha}{\sqrt{1+\alpha^2}}}. Must be within \eqn{(-1,1)}.}
-
-\item{tau}{vector of the inverted scale parameters of the skew-normal distribution, e.g. \eqn{\tau = \frac{1}{\omega}}. Must be positive.}
+\item{par_u}{vector of \eqn{\sigma_U} or \eqn{\lambda}. Must be positive.}
 
 \item{mean}{vector of mean of \eqn{\mathcal{E}}}
 
@@ -52,30 +36,23 @@ reparametrize(
 
 \item{skew}{vector of skewness of \eqn{\mathcal{E}}.}
 
-\item{par_u}{vector of \eqn{\sigma_U} or \eqn{\lambda}. Must be positive.}
-
 \item{family}{\code{normhnorm} for normal-halfnormal and \code{normexp} for normal-exponential distribution.}
 }
 \value{
 Returns a data.frame with the parameter values for all specification.
 }
 \description{
-Transforms the given inputs to the parameters and the first three moments of the corresponding distribution. For the normal-halfnormal distribution the parametrization of the classical stochastic frontier as well as the skew-normal and centred skew-normal specification ar provided. For the normal-exponential an the specification via \eqn{\lambda} and \eqn{\nu} are available.
+Transforms the given inputs to the parameters and the first three moments of the corresponding distribution. For the normal-halfnormal distribution the parametrization of the classical stochastic frontier as well as the skew-normal and centred skew-normal specification ar provided. For the normal-exponential an the specification via \eqn{\lambda} is available.
 }
 \details{
 The following input combinations are allowed for the normal-halfnormal distribution
 \itemize{
 \item \code{mu}, \code{sigma_v}, \code{sigma_u}, \code{s}
-\item \code{xi}, \code{omega}, \code{alpha}
-\item \code{xi}, \code{tau}, \code{alpha}
-\item \code{xi}, \code{omega}, \code{delta}
-\item \code{xi}, \code{tau}, \code{delta}
-\item \code{mean}, \code{sd}, \code{skew}, \code{family="normhnorm"}    \eqn{\qquad,}
+\item \code{mean}, \code{sd}, \code{skew}, \code{family="normhnorm"}  with optional \code{s}  \eqn{\qquad,}
 } while for the normal-exponential distribution the feasible inputs are
 \itemize{
 \item \code{mu}, \code{sigma_v}, \code{lambda}, \code{s}
-\item \code{mu}, \code{sigma_v}, \code{nu}, \code{s}
-\item \code{mean}, \code{sd}, \code{skew}, \code{family="normexp"} \eqn{\qquad.}
+\item \code{mean}, \code{sd}, \code{skew}, \code{family="normexp"} with optional \code{s} \eqn{\qquad.}
 } Other input combinations are not feasible.
 }
 \examples{

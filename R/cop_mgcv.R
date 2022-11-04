@@ -15,16 +15,15 @@
 #' @return An object inheriting from class \code{general.family} of the mgcv package, which can be used in the dsfa package.
 #'
 #' @details Internal function. Used with gam to fit copula model, which in turn is used for starting values. The function \code{gam} is from the mgcv package is called with a formula.
-#' The formula specifies the a dummy on the left hand side and the structure of the additive predictor for \eqn{\delta} parameter on the right hand side. Link function is "generalized logit".
-#' \eqn{glogit(\eta)=log((-min+mu)/(max-mu))} where for each family_cop argument there are specific \code{min} and \code{max} arguments, which are the boundaries of the parameter space. Although the parameter space is
+#' The formula specifies the a dummy on the left hand side and the structure of the additive predictor for \eqn{\delta} parameter on the right hand side. Link function is "generalized logit", where for each family_cop argument there are specific \code{a} and \code{b} arguments, which are the boundaries of the parameter space. Although the parameter space is
 #' larger in theory, numeric under- and overflow limit the parameter space.
 #' \enumerate{
-#'  \item  `independent`, min=0 and max=1
-#' \item  `normal`, min=-1 and max=1
-#' \item  `clayton`, min=1e-16 and max=28
-#' \item  `gumbel`, min=1 and max=17
-#' \item  `frank`, min=-35 and max=35
-#' \item  `joe`, min=1e-16 and max=30
+#'  \item  `independent`, a=0 and b=1
+#' \item  `normal`, a=-1 and b=1
+#' \item  `clayton`, a=1e-16 and b=28
+#' \item  `gumbel`, a=1 and b=17
+#' \item  `frank`, a=-35 and b=35
+#' \item  `joe`, a=1e-16 and b=30
 #' }
 #'
 #' @examples
@@ -33,7 +32,7 @@
 #' N=1000 #Sample size
 #' x1<-runif(N,-1,1)
 #' eta<-1+2.5*x1
-#' delta<-(exp(eta)-1)/(exp(eta)+1)
+#' delta<-rsp(x=eta, link="glogit", a=-1, b=1)
 #' dat<-as.data.frame(rcop(n=N, delta=delta, family="normal"))
 #' dat$y<-1
 #' model<-mgcv::gam(y~x1, data=dat,
@@ -73,10 +72,13 @@ cop <- function(link = list("glogit"), W, family_cop="normal"){
   if(family_cop=="frank"){
     a<--35
     b<-35
+
+    stop(paste("The pdf of the frank copula is not functional yet.", "\n", ""))
+
   }
 
   if(family_cop=="joe"){
-    a<-1+1e-16
+    a<-1+1e-6
     b<-30
   }
 
@@ -214,8 +216,8 @@ cop <- function(link = list("glogit"), W, family_cop="normal"){
 
 
       #Wrapper for Copula package function
-      delta_start<-copula::fitCopula(copula=cop_object, data=family$W)@estimate
-      start <- c(family$linfo[[1]]$linkfun(delta_start),rep(0,ncol(x)-1))
+      delta_start<-suppressWarnings(copula::fitCopula(copula=cop_object, data=as.matrix(family$W))@estimate)
+      start <- c(delta_start,rep(0,ncol(x)-1))
     }
     #
   }) ## initialize
@@ -268,8 +270,8 @@ cop <- function(link = list("glogit"), W, family_cop="normal"){
                  tri = mgcv::trind.generator(npar), ## symmetric indices for accessing derivative arrays
                  initialize=initialize,
                  W=W,
-                 min=a,
-                 max=b,
+                 a=a,
+                 b=b,
                  family_cop=family_cop,
                  residuals=residuals,
                  predict=predict,

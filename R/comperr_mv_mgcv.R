@@ -198,7 +198,7 @@ comperr_mv <- function(link = list("identity", "log", "log", "identity", "log", 
     ##Define parameters
     l0<-dcomperr_mv(x1=y[,1], mu1=mu1, sigma_v1=sigma_v1, par_u1=par_u1, s1=s1,
                     x2=y[,2], mu2=mu2, sigma_v2=sigma_v2, par_u2=par_u2, s2=s2,
-                    delta=delta, family_mv=family$family_mv, deriv=2, tri=family$tri, log.p = TRUE)
+                    delta=delta, family_mv=family$family_mv, deriv=2, tri=family$tri, log.p = TRUE, check=FALSE)
 
     l<-sum(l0)
 
@@ -315,26 +315,25 @@ comperr_mv <- function(link = list("identity", "log", "log", "identity", "log", 
   }) ## initialize
 
   #Random number generation for comperr_mv
-  rd <- function(mu, wt, scale, family) {
+  rd <- function(mu, wt, scale) {
     ## random number generation
     mu <- as.matrix(mu)
     if(ncol(mu)==2){ mu <- t(mu) }
 
-    return(rcomperr_mv(ncol(mu), mu1 = mu[,1], sigma_v1 = mu[,2], par_u1 = mu[,3], s1=family$s1,
-                                 mu2 = mu[,4], sigma_v2 = mu[,5], par_u2 = mu[,6], s2=family$s2,
-                                 delta= mu[,7], family_mv=family$family_mv))
+    return(rcomperr_mv(ncol(mu), mu1 = mu[,1], sigma_v1 = mu[,2], par_u1 = mu[,3], s1=attr(mu,"s")[1],
+                                 mu2 = mu[,4], sigma_v2 = mu[,5], par_u2 = mu[,6], s2=attr(mu,"s")[2],
+                                 delta= mu[,7], family_mv=attr(mu,"family")))
   } ## random number generation
 
   #Cumulative distribution function of comperr_mv
-  cdf <- function(q, mu, wt, scale, logp, family) {
+  cdf <- function(q, mu, wt, scale, logp) {
     ##cumulative distribution function
     mu <- as.matrix(mu)
     if(ncol(mu)==2){ mu <- t(mu) }
 
-    return(pcomperr_mv(q1=q[,1], mu1 = mu[,1], sigma_v1 = mu[,2], par_u1 = mu[,3], s1=family$s1,
-                       q2=q[,2], mu2 = mu[,4], sigma_v2 = mu[,5], par_u2 = mu[,6], s2=family$s2,
-                       delta=mu[,7], family_mv=family$family_mv),
-                       log.p = logp)
+    return(pcomperr_mv(q1=q[,1], mu1 = mu[,1], sigma_v1 = mu[,2], par_u1 = mu[,3], s1=attr(mu,"s")[1],
+                       q2=q[,2], mu2 = mu[,4], sigma_v2 = mu[,5], par_u2 = mu[,6], s2=attr(mu,"s")[2],
+                       delta=mu[,7], family_mv=attr(mu,"family")))
   } ##cumulative distribution function
 
   #Prediction function
@@ -400,6 +399,12 @@ comperr_mv <- function(link = list("identity", "log", "log", "identity", "log", 
     return(list(family=G$family))
   }
 
+  postproc <- expression({
+    attr(object$fitted.values,"s")<-c(object$family$s1,object$family$s2)
+    attr(object$fitted.values,"family")<-object$family$family_mv
+    object$fitted.values
+  })
+
   structure(list(family="comperr_mv", ll=ll, link=paste(link), nlp=npar,
                  tri = mgcv::trind.generator(npar), ## symmetric indices for accessing derivative arrays
                  initialize=initialize,
@@ -411,6 +416,7 @@ comperr_mv <- function(link = list("identity", "log", "log", "identity", "log", 
                  rd=rd,
                  cdf=cdf,
                  predict=predict,
+                 postproc=postproc,
                  linfo = stats, ## link information list
                  d2link=1, d3link=1, d4link=1, ## signals to fix.family.link that all done
                  ls=1, ## signals that ls not needed here

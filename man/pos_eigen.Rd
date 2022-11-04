@@ -3,16 +3,26 @@
 \name{pos_eigen}
 \alias{pos_eigen}
 \alias{remove_attr}
+\alias{outlier_correct_column}
+\alias{outlier_correct}
 \title{Utility functions}
 \usage{
 pos_eigen(H)
 
 remove_attr(object)
+
+outlier_correct_column(x)
+
+outlier_correct(X)
 }
 \arguments{
 \item{H}{symmetric matrix of full rank.}
 
 \item{object}{vector or matrix.}
+
+\item{x}{vector}
+
+\item{X}{matrix}
 }
 \value{
 \code{pos_eigen} returns a list with three elements: 1) Matrix with positive eigenvalues, 2) Matrix with square root of positive eigenvalues and 3) Matrix with inverse positive eigenvalues.
@@ -28,6 +38,10 @@ Collection of utility functions which are for internal usage. \code{pos_eigen} t
 \itemize{
 \item \code{remove_attr()}: Remove attribute function
 
+\item \code{outlier_correct_column()}: Correct -Inf, Inf, NaN, NA and outliers im vector
+
+\item \code{outlier_correct()}: Correct -Inf, Inf, NaN, NA and outliers in matrix
+
 }}
 \examples{
 H<-diag(3)*(-1)
@@ -36,6 +50,9 @@ pos_eigen(H)
 x<-1
 attr(x,"gradient")<-2
 x<-remove_attr(x)
+
+x<-matrix(c(-Inf, Inf, rnorm(10,0,10)),ncol=1)
+outlier_correct(x)
 
 }
 \keyword{internal}

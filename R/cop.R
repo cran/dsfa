@@ -92,134 +92,196 @@ dcop<-function(W, delta, family_cop="normal", log.p=FALSE, deriv=0){
       stop(paste("p must be in (-1,1)", "\n", ""))
     }
 
-    #Quantile transformation
-    X<-stats::qnorm(W)
+    if(D==2){
+      x1=qnorm(p=u, deriv=deriv)
+      x2=qnorm(p=v, deriv=deriv)
 
-      #Get parameters
-      npar_delta<-ncol(delta)
-      npar_all<-D+npar_delta
-      ID<-diag(D)
+      expr2 <- -1/2
+      expr3 <- p^2
+      expr4 <- 1 - expr3
+      expr9 <- x1^2 + x2^2
+      expr11 <- 2 * p
+      expr12 <- expr11 * x1
+      expr14 <- expr3 * expr9 - expr12 * x2
+      expr15 <- 2 * expr4
+      expr18 <- 2 * x1
+      expr21 <- expr3 * expr18 - expr11 * x2
+      expr26 <- -(expr3 * 2/expr15)
+      expr29 <- 2 * x2
+      expr32 <- 2 * expr11
+      expr34 <- expr15^2
+      expr39 <- expr3 * expr29 - expr12
+      expr53 <- expr11 * expr9 - expr18 * x2
+      expr55 <- expr14 * expr32
+      expr68 <- expr53 * expr32
+      value <- expr2 * log(expr4) - expr14/expr15
 
-      tri_all<-mgcv::trind.generator(npar_all)
-      tri_x<-mgcv::trind.generator(D)
+      if(deriv>0){
+        gradient <- matrix(0, nrow=N, ncol=3)
+        grad<-gradient
+        hessian <- matrix(0, nrow=N, ncol=6)
+        hess<-hessian
 
-      # tri_P<-trind.generator(npar_delta)
-      # diag(tri_P$i2)<-0
+        #Derivatives of qnorm wrt u and v
+        d1qnormdu1<-attr(x1,"gradient")
+        d2qnormdu2<-attr(x1,"hessian")
+        d1qnormdv1<-attr(x2,"gradient")
+        d2qnormdv2<-attr(x2,"hessian")
 
-      xN<-matrix(0,D,1)
-      PN<-matrix(0,D,D)
+        grad[, 1] <- -(expr21/expr15)
+        hess[, 1] <- expr26
+        hess[, 2]  <- expr11/expr15
+        hess[, 3]  <- -((expr11 * expr18 - expr29)/expr15 + expr21 * expr32/expr34)
+        grad[, 2] <- -(expr39/expr15)
+        hess[, 4] <- expr26
+        hess[, 5] <-  -((expr11 * expr29 - expr18)/expr15 + expr39 * expr32/expr34)
+        grad[, 3] <- -(expr2 * (expr11/expr4) + (expr53/expr15 + expr55/expr34))
+        hess[, 6] <- -(expr2 * (2/expr4 + expr11 * expr11/expr4^2) + (2 * expr9/expr15 + expr68/expr34 + ((expr68 + expr14 * (2 * 2))/expr34 + expr55 * (2 * (expr32 * expr15))/expr34^2)))
 
-      tri_P<-list()
-      tri_P$i1<-PN
-      tri_P$i1[upper.tri(ID)]<-1:npar_delta
-      tri_P$i1<-tri_P$i1+t(tri_P$i1)-diag(diag(tri_P$i1))
+        gradient[,1]<-grad[,1]*d1qnormdu1
+        gradient[,2]<-grad[,2]*d1qnormdv1
+        gradient[,3]<-grad[,3]
+        hessian[,1]<-hess[,1]*d1qnormdu1^2+grad[,1]*d2qnormdu2
+        hessian[,2]<-hess[,2]*d1qnormdu1*d1qnormdv1
+        hessian[,3]<-hess[,3]*d1qnormdu1
+        hessian[,4]<-hess[,4]*d1qnormdv1^2+grad[,2]*d2qnormdv2
+        hessian[,5]<-hess[,5]*d1qnormdv1
+        hessian[,6]<-hess[,6]
+      }
+    } else {
 
-      #Initialize out, l1 and l2
-      out<-rep(0,N)
-      l1<-matrix(0, nrow=N, ncol=D+npar_delta)
-      l2<-matrix(0, nrow=N, ncol=max(tri_all$i2))
+      #Quantile transformation
+      X<-qnorm(W, deriv=deriv)#stats::qnorm(W)
 
-      for(n in 1:N){
-        # print(n)
+        #Get parameters
+        npar_delta<-ncol(delta)
+        npar_all<-D+npar_delta
+        ID<-diag(D)
 
-        #Get pseudo observations n
-        x<-t(X[n, , drop=FALSE])
-        Z<-x%*%t(x)
+        tri_all<-mgcv::trind.generator(npar_all)
+        tri_x<-mgcv::trind.generator(D)
 
-        #Create correlation matrix P
-        P<-ID
-        P[upper.tri(P)]<-delta[n,]
-        P<-P+t(P)-diag(diag(P))
-        P<-pos_eigen(P)$I
-        P_inv<-solve(P)
+        # tri_P<-trind.generator(npar_delta)
+        # diag(tri_P$i2)<-0
 
-        #Numerical convience
-        h0<-(P_inv-ID)
-        h4<-h0%*%P_inv
+        xN<-matrix(0,D,1)
+        PN<-matrix(0,D,D)
 
-        #Calculate loglike
-        out[n]<--1/2*log(det(P))-1/2*sum(diag(h0%*%Z))#-1/2*log(det(P))-1/2*sum(diag((P_inv-ID)%*%Z))
+        tri_P<-list()
+        tri_P$i1<-PN
+        tri_P$i1[upper.tri(ID)]<-1:npar_delta
+        tri_P$i1<-tri_P$i1+t(tri_P$i1)-diag(diag(tri_P$i1))
 
-        if(deriv>0){
-          #Derivatives of qnorm wrt W
-          d1qnormdu1<-d1qnormdx1(W[n, , drop=FALSE])
-          d2qnormdu2<-diag(c(d2qnormdx2(W[n, , drop=FALSE])))
+        #Initialize out, l1 and l2
+        out<-rep(0,N)
+        l1<-matrix(0, nrow=N, ncol=D+npar_delta)
+        l2<-matrix(0, nrow=N, ncol=max(tri_all$i2))
 
-          h9<-P_inv%*%Z
-          #Deriv of lcop wrt W
-          for(i in 1:npar_all){
-            if(i<=D){
-              #First deriv wrt W
-              d1xdui1<-xN
-              d1xdui1[i]<-1
-              h1<-(d1xdui1*d1qnormdu1[,i])%*%t(x)
-              l1[n,i]<--1/2*sum(diag(h0%*%(h1+t(h1))))
+        for(n in 1:N){
+          # print(n)
 
-              #Second deriv wrt W and delta
-              for(j in i:npar_all){
-                if(j<=D){
-                  d1xdxi1<-xN
-                  d1xdxi1[i]<-1
-                  d1xidui1<-d1qnormdu1[,i]
+          #Get pseudo observations n
+          x<-t(X[n, , drop=FALSE])
+          Z<-x%*%t(x)
 
-                  d1xduj1<-xN
-                  d1xduj1[j]<-1
-                  d1xjduj1<-d1qnormdu1[,j]
+          #Create correlation matrix P
+          P<-ID
+          P[upper.tri(P)]<-delta[n,]
+          P<-P+t(P)-diag(diag(P))
+          P<-pos_eigen(P)$I
+          P_inv<-solve(P)
 
-                  h6<-d1xdui1%*%t(d1xduj1)
-                  l2[n,tri_all$i2[i,j]]<--1/2*sum(diag(h0%*%(h6+t(h6))))
-                  h7<-d1xdui1%*%t(x)
-                  l2[n,tri_all$i2[i,j]]<-l2[n,tri_all$i2[i,j]]*d1qnormdu1[,j]*d1qnormdu1[,i]-1/2*sum(diag(h0%*%(h7+t(h7))))*d2qnormdu2[i,j]
-                } else {
-                  d1Pdp1<-PN
-                  d1Pdp1[tri_P$i1==(j-D)]<-1
-                  l2[n,tri_all$i2[i,j]]<-1/2*sum(diag(P_inv%*%d1Pdp1%*%P_inv%*%(h1+t(h1))))
+          #Numerical convience
+          h0<-(P_inv-ID)
+          h4<-h0%*%P_inv
+
+          #Calculate loglike
+          out[n]<--1/2*log(det(P))-1/2*sum(diag(h0%*%Z))#-1/2*log(det(P))-1/2*sum(diag((P_inv-ID)%*%Z))
+
+          if(deriv>0){
+            #Derivatives of qnorm wrt W
+            d1qnormdu1<-attr(X,"gradient")[n, , drop=FALSE]
+            d2qnormdu2<-diag(c(attr(X,"hessian")[n, , drop=FALSE]))
+
+            # d1qnormdu1<-d1qnormdx1(W[n, , drop=FALSE])
+            # d2qnormdu2<-diag(c(d2qnormdx2(W[n, , drop=FALSE])))
+
+            h9<-P_inv%*%Z
+            #Deriv of lcop wrt W
+            for(i in 1:npar_all){
+              if(i<=D){
+                #First deriv wrt W
+                d1xdui1<-xN
+                d1xdui1[i]<-1
+                h1<-(d1xdui1*d1qnormdu1[,i])%*%t(x)
+                l1[n,i]<--1/2*sum(diag(h0%*%(h1+t(h1))))
+
+                #Second deriv wrt W and delta
+                for(j in i:npar_all){
+                  if(j<=D){
+                    d1xdxi1<-xN
+                    d1xdxi1[i]<-1
+                    d1xidui1<-d1qnormdu1[,i]
+
+                    d1xduj1<-xN
+                    d1xduj1[j]<-1
+                    d1xjduj1<-d1qnormdu1[,j]
+
+                    h6<-d1xdui1%*%t(d1xduj1)
+                    l2[n,tri_all$i2[i,j]]<--1/2*sum(diag(h0%*%(h6+t(h6))))
+                    h7<-d1xdui1%*%t(x)
+                    l2[n,tri_all$i2[i,j]]<-l2[n,tri_all$i2[i,j]]*d1qnormdu1[,j]*d1qnormdu1[,i]-1/2*sum(diag(h0%*%(h7+t(h7))))*d2qnormdu2[i,j]
+                  } else {
+                    d1Pdp1<-PN
+                    d1Pdp1[tri_P$i1==(j-D)]<-1
+                    l2[n,tri_all$i2[i,j]]<-1/2*sum(diag(P_inv%*%d1Pdp1%*%P_inv%*%(h1+t(h1))))
+                  }
                 }
-              }
-            } else {
-              #First deriv wrt delta
-              d1Pdp1<-PN
-              d1Pdp1[tri_P$i1==(i-D)]<-1
-              h5<-P_inv%*%d1Pdp1
-              l1[n,i]<--1/2*sum(diag(h5%*%(ID-h9)))
+              } else {
+                #First deriv wrt delta
+                d1Pdp1<-PN
+                d1Pdp1[tri_P$i1==(i-D)]<-1
+                h5<-P_inv%*%d1Pdp1
+                l1[n,i]<--1/2*sum(diag(h5%*%(ID-h9)))
 
-              #Second deriv wrt delta
-              for(j in i:npar_all){
-                d1Pdq1<-PN
-                d1Pdq1[tri_P$i1==(j-D)]<-1
-                h8<-P_inv%*%d1Pdq1
-                l2[n,tri_all$i2[i,j]]<--1/2*sum(diag(-h8%*%h5%*%(diag(D)-h9)+
-                                                       h5%*%h8%*%h9))
+                #Second deriv wrt delta
+                for(j in i:npar_all){
+                  d1Pdq1<-PN
+                  d1Pdq1[tri_P$i1==(j-D)]<-1
+                  h8<-P_inv%*%d1Pdq1
+                  l2[n,tri_all$i2[i,j]]<--1/2*sum(diag(-h8%*%h5%*%(diag(D)-h9)+
+                                                         h5%*%h8%*%h9))
+                }
               }
             }
           }
         }
-      }
-    # }
-    # value <- -1/2*log(1-p^2)+p/(1-p^2)*qnorm(u)*qnorm(v)-p^2/(2*(1-p^2))*(qnorm(u)^2 +qnorm(v)^2)
-    #
-    # if(deriv>0) {
-    #   d1qnormdu1 <- d1qnormdx1(u)
-    #   d1qnormdv1 <- d1qnormdx1(v)
-    #
-    #   d2qnormdu2 <- d2qnormdx2(u)
-    #   d2qnormdv2 <- d2qnormdx2(v)
-    #
-    #   gradient <- matrix(0, nrow = N, ncol = 3)
-    #   hessian <- matrix(0, nrow = N, ncol = 6)
-    #   gradient[, 1] <- p/(1-p^2)*d1qnormdu1*qnorm(v)-p^2/(1-p)*qnorm(u)*d1qnormdu1
-    #   gradient[, 2] <- p/(1-p^2)*qnorm(u)*d1qnormdv1-p^2/(1-p)*qnorm(v)*d1qnormdv1
-    #   gradient[, 3] <- 1/(1-p^2)+(p^2+1)/(1-p^2)^2*qnorm(u)*qnorm(v)-p/(1-p^2)^2*(qnorm(u)^2+qnorm(v)^2)
-    #   hessian[, 1] <- p/(1-p^2)*d2qnormdu2*qnorm(v)-p^2/(1-p^2)*(d1qnormdu1^2+qnorm(u)*d2qnormdu2)
-    #   hessian[, 2] <- p/(1-p^2)*d1qnormdu1*d1qnormdv1
-    #   hessian[, 3] <- (p^2+1)/(1-p^2)^2*d1qnormdu1*qnorm(v)-2*p/(1-p^2)^2*qnorm(u)*d1qnormdu1
-    #   hessian[, 4] <- p/(1-p^2)*qnorm(u)*d2qnormdv2-p^2/(1-p^2)*(d1qnormdv1^2+qnorm(v)*d2qnormdv2)
-    #   hessian[, 5] <- (p^2+1)/(1-p^2)^2*qnorm(u)*d1qnormdv1-2*p/(1-p^2)^2*qnorm(v)*d1qnormdv1
-    #   hessian[, 6] <- (p^2+1)/(1-p^2)^2+2*p*(p^2+3)/(1-p^2)^3*qnorm(u)*qnorm(v)-(-3*p-1)/(1-p^2)^3*(qnorm(u)^2+qnorm(v)^2)
-    # }
-    value<-out
-    gradient<-l1
-    hessian<-l2
+      # }
+      # value <- -1/2*log(1-p^2)+p/(1-p^2)*qnorm(u)*qnorm(v)-p^2/(2*(1-p^2))*(qnorm(u)^2 +qnorm(v)^2)
+      #
+      # if(deriv>0) {
+      #   d1qnormdu1 <- d1qnormdx1(u)
+      #   d1qnormdv1 <- d1qnormdx1(v)
+      #
+      #   d2qnormdu2 <- d2qnormdx2(u)
+      #   d2qnormdv2 <- d2qnormdx2(v)
+      #
+      #   gradient <- matrix(0, nrow = N, ncol = 3)
+      #   hessian <- matrix(0, nrow = N, ncol = 6)
+      #   gradient[, 1] <- p/(1-p^2)*d1qnormdu1*qnorm(v)-p^2/(1-p)*qnorm(u)*d1qnormdu1
+      #   gradient[, 2] <- p/(1-p^2)*qnorm(u)*d1qnormdv1-p^2/(1-p)*qnorm(v)*d1qnormdv1
+      #   gradient[, 3] <- 1/(1-p^2)+(p^2+1)/(1-p^2)^2*qnorm(u)*qnorm(v)-p/(1-p^2)^2*(qnorm(u)^2+qnorm(v)^2)
+      #   hessian[, 1] <- p/(1-p^2)*d2qnormdu2*qnorm(v)-p^2/(1-p^2)*(d1qnormdu1^2+qnorm(u)*d2qnormdu2)
+      #   hessian[, 2] <- p/(1-p^2)*d1qnormdu1*d1qnormdv1
+      #   hessian[, 3] <- (p^2+1)/(1-p^2)^2*d1qnormdu1*qnorm(v)-2*p/(1-p^2)^2*qnorm(u)*d1qnormdu1
+      #   hessian[, 4] <- p/(1-p^2)*qnorm(u)*d2qnormdv2-p^2/(1-p^2)*(d1qnormdv1^2+qnorm(v)*d2qnormdv2)
+      #   hessian[, 5] <- (p^2+1)/(1-p^2)^2*qnorm(u)*d1qnormdv1-2*p/(1-p^2)^2*qnorm(v)*d1qnormdv1
+      #   hessian[, 6] <- (p^2+1)/(1-p^2)^2+2*p*(p^2+3)/(1-p^2)^3*qnorm(u)*qnorm(v)-(-3*p-1)/(1-p^2)^3*(qnorm(u)^2+qnorm(v)^2)
+      # }
+      value<-out
+      gradient<-l1
+      hessian<-l2
+    }
   }
 
   if(family_cop=="clayton"){
@@ -439,74 +501,101 @@ dcop<-function(W, delta, family_cop="normal", log.p=FALSE, deriv=0){
       stop(paste("p must be in (1,30]", "\n", ""))
     }
 
-    expr2 <- 1/p - 2
-    expr3 <- 1 - u
+    expr1 <- 1 - u
+    expr2 <- expr1^p
+    expr3 <- 1 - v
     expr4 <- expr3^p
-    expr6 <- -log(v)
-    expr7 <- expr6^p
-    expr9 <- expr4 * expr7
-    expr10 <- expr4 + expr7 - expr9
-    expr11 <- log(expr10)
-    expr13 <- p - 1
-    expr16 <- expr13 + expr4 + expr7 - expr9
-    expr19 <- log(expr3)
-    expr22 <- 1 - v
-    expr23 <- log(expr22)
-    expr26 <- 1/expr3
-    expr28 <- expr3^expr13
-    expr29 <- expr28 * p
-    expr31 <- expr29 - expr29 * expr7
-    expr33 <- expr31/expr10
-    expr41 <- expr13 - 1
-    expr44 <- expr3^expr41 * expr13 * p
-    expr46 <- expr44 - expr44 * expr7
-    expr48 <- expr31 * expr31
-    expr49 <- expr10^2
-    expr54 <- expr16^2
-    expr60 <- expr6^expr13
-    expr61 <- 1/v
-    expr62 <- p * expr61
-    expr63 <- expr60 * expr62
-    expr64 <- expr29 * expr63
-    expr67 <- expr63 - expr4 * expr63
-    expr68 <- expr31 * expr67
-    expr79 <- expr28 * expr19 * p + expr28
-    expr81 <- log(expr6)
-    expr82 <- expr7 * expr81
-    expr85 <- expr79 - (expr79 * expr7 + expr29 * expr82)
-    expr87 <- expr4 * expr19
-    expr92 <- expr87 * expr7 + expr4 * expr82
-    expr93 <- 1 + expr87 + expr82 - expr92
-    expr99 <- expr87 + expr82 - expr92
-    expr104 <- p^2
-    expr105 <- 1/expr104
-    expr111 <- 1/expr22
-    expr114 <- expr67/expr10
-    expr130 <- expr60 * (p * (1/v^2)) + expr6^expr41 * (expr13 * expr61) * expr62
-    expr132 <- expr130 - expr4 * expr130
-    expr134 <- expr67 * expr67
-    expr147 <- expr60 * expr81 * expr62 + expr60 * expr61
-    expr151 <- expr147 - (expr87 * expr63 + expr4 * expr147)
-    expr166 <- expr99/expr10
-    expr174 <- expr87 * expr19
-    expr175 <- expr82 * expr81
-    expr178 <- expr87 * expr82
-    expr183 <- expr174 + expr175 - (expr174 * expr7 + expr178 + (expr178 + expr4 * expr175))
-    expr189 <- expr105 * expr166
-    value <- expr2 * expr11 + log(expr16) + expr13 * expr19 + expr13 * expr23
+    expr6 <- expr2 * expr4
+    expr7 <- expr2 + expr4 - expr6
+    expr9 <- 1/p - 2
+    expr10 <- expr7^expr9
+    expr11 <- p - 1
+    expr14 <- expr11 + expr2 + expr4 - expr6
+    expr15 <- expr10 * expr14
+    expr16 <- expr1^expr11
+    expr17 <- expr15 * expr16
+    expr18 <- expr3^expr11
+    expr19 <- expr17 * expr18
+    expr21 <- expr11 - 1
+    expr22 <- expr1^expr21
+    expr23 <- expr22 * expr11
+    expr25 <- expr16 * p
+    expr27 <- expr25 - expr25 * expr4
+    expr29 <- expr9 - 1
+    expr30 <- expr7^expr29
+    expr31 <- expr9 * expr27
+    expr32 <- expr30 * expr31
+    expr34 <- expr10 * expr27 + expr32 * expr14
+    expr36 <- expr15 * expr23 + expr34 * expr16
+    expr37 <- expr36 * expr18
+    expr40 <- expr34 * expr23
+    expr41 <- expr32 * expr27
+    expr42 <- expr23 * p
+    expr44 <- expr42 - expr42 * expr4
+    expr48 <- expr7^(expr29 - 1)
+    expr60 <- expr21 - 1
+    expr70 <- expr19^2
+    expr73 <- expr18 * p
+    expr74 <- expr25 * expr73
+    expr77 <- expr73 - expr2 * expr73
+    expr78 <- expr9 * expr77
+    expr79 <- expr30 * expr78
+    expr85 <- expr48 * (expr29 * expr77)
+    expr95 <- expr10 * expr77 + expr79 * expr14
+    expr99 <- expr3^expr21
+    expr100 <- expr99 * expr11
+    expr105 <- expr95 * expr16
+    expr107 <- expr17 * expr100 + expr105 * expr18
+    expr112 <- log(expr1)
+    expr113 <- expr2 * expr112
+    expr114 <- log(expr3)
+    expr115 <- expr4 * expr114
+    expr119 <- expr113 * expr4 + expr2 * expr115
+    expr120 <- expr113 + expr115 - expr119
+    expr121 <- expr9 * expr120
+    expr123 <- log(expr7)
+    expr124 <- p^2
+    expr125 <- 1/expr124
+    expr126 <- expr123 * expr125
+    expr128 <- expr30 * expr121 - expr10 * expr126
+    expr132 <- 1 + expr113 + expr115 - expr119
+    expr134 <- expr128 * expr14 + expr10 * expr132
+    expr142 <- expr16 * expr112
+    expr144 <- expr142 * p + expr16
+    expr148 <- expr144 - (expr144 * expr4 + expr25 * expr115)
+    expr154 <- expr48 * (expr29 * expr120) - expr30 * expr126
+    expr170 <- expr18 * expr114
+    expr176 <- expr134 * expr16 + expr15 * expr142
+    expr179 <- expr176 * expr18 + expr17 * expr170
+    expr186 <- expr105 * expr100
+    expr187 <- expr79 * expr77
+    expr188 <- expr100 * p
+    expr190 <- expr188 - expr2 * expr188
+    expr221 <- expr170 * p + expr18
+    expr225 <- expr221 - (expr113 * expr73 + expr2 * expr221)
+    expr252 <- expr113 * expr112
+    expr253 <- expr115 * expr114
+    expr256 <- expr113 * expr115
+    expr261 <- expr252 + expr253 - (expr252 * expr4 + expr256 + (expr256 + expr2 * expr253))
+    expr279 <- expr128 * expr132
+    expr285 <- expr134 * expr142
+    expr292 <- expr176 * expr170
+    value <- log(expr19)
 
     if(deriv>0){
       gradient <- matrix(0, nrow=N, ncol=3)
       hessian <- matrix(0, nrow=N, ncol=6)
-      gradient[, 1] <- -(expr13 * expr26 + (expr31/expr16 +  expr2 * expr33))
-      hessian[, 1] <- -(expr13 * (1/expr3^2) - (expr2 * (expr46/expr10 - expr48/expr49) + (expr46/expr16 - expr48/expr54)))
-      hessian[, 2]  <- -(expr64/expr16 +   expr68/expr54 + expr2 * (expr64/expr10 + expr68/expr49))
-      hessian[, 3]  <- -(expr26 +   (expr85/expr16 - expr31 * expr93/expr54 + (expr2 * (expr85/expr10 - expr31 * expr99/expr49) - expr105 * expr33)))
-      gradient[, 2] <- -(expr13 * expr111 + (expr67/expr16 + expr2 * expr114))
-      hessian[, 4] <- -(expr13 * (1/expr22^2) - (expr2 * (expr132/expr10 - expr134/expr49) + (expr132/expr16 - expr134/expr54)))
-      hessian[, 5]  <- -(expr111 + (expr151/expr16 - expr67 * expr93/expr54 + (expr2 * (expr151/expr10 - expr67 * expr99/expr49) - expr105 * expr114)))
-      gradient[, 3] <- expr2 * expr166 - expr105 * expr11 + expr93/expr16 + expr19 + expr23
-      hessian[, 6] <- expr2 * (expr183/expr10 - expr99 *  expr99/expr49) - expr189 - (expr189 - 2 * p/expr104^2 * expr11) + (expr183/expr16 - expr93 * expr93/expr54)
+      gradient[, 1] <- -(expr37/expr19)
+      hessian[,1] <- (expr40 + (expr41 + (expr30 * (expr9 * expr44) + expr48 * (expr29 * expr27) *expr31) * expr14 + (expr10 * expr44 + expr41)) * expr16 + (expr15 * (expr1^expr60 * expr21 * expr11) + expr40)) * expr18/expr19 - expr37 * expr37/expr70
+      hessian[, 2] <- -((((expr10 * expr74 - expr79 * expr27 + ((expr30 * (expr9 * expr74) - expr85 * expr31) * expr14 - expr32 * expr77)) * expr16 - expr95 * expr23) * expr18 - expr36 * expr100)/expr19 + expr37 * expr107/expr70)
+      hessian[, 3] <- -(((expr134 * expr23 + expr15 * (expr22 * expr112 * expr11 + expr22) + ((expr128 * expr27 + expr10 * expr148 + ((expr154 *  expr31 + expr30 * (expr9 * expr148 - expr125 *
+              expr27)) * expr14 + expr32 * expr132)) * expr16 +  expr34 * expr142)) * expr18 + expr36 * expr170)/expr19 - expr37 * expr179/expr70)
+      gradient[, 2] <- -(expr107/expr19)
+      hessian[, 4] <- (expr186 + (expr187 + (expr30 *  (expr9 * expr190) + expr85 * expr78) * expr14 +  (expr10 * expr190 + expr187)) * expr16 * expr18 +
+                                 (expr17 * (expr3^expr60 * expr21 * expr11) + expr186))/expr19 - expr107 * expr107/expr70
+      hessian[, 5] <-  -((expr176 * expr100 + expr17 * (expr99 * expr114 * expr11 + expr99) + (((expr128 * expr77 + expr10 * expr225 + ((expr154 * expr78 + expr30 * (expr9 * expr225 - expr125 * expr77)) * expr14 + expr79 * expr132)) * expr16 + expr95 * expr142) * expr18 + expr105 * expr170))/expr19 - expr107 * expr179/expr70)
+      gradient[,3] <- expr179/expr19
+      hessian[, 6] <- ((((expr154 * expr121 + expr30 * (expr9 * expr261 - expr125 * expr120) - (expr128 * expr126 + expr10 * (expr120/expr7 * expr125 - expr123 *(2 * p/expr124^2)))) * expr14 + expr279 + (expr279 + expr10 * expr261)) * expr16 + expr285 + (expr285 + expr15 * (expr142 * expr112))) * expr18 + expr292 +  (expr292 + expr17 * (expr170 * expr114)))/expr19 - expr179 * expr179/expr70
     }
   }
 
@@ -515,8 +604,8 @@ dcop<-function(W, delta, family_cop="normal", log.p=FALSE, deriv=0){
   }
 
   if(deriv>0){
-    attr(value, "gradient") <- gradient
-    attr(value, "hessian") <- hessian
+    attr(value, "gradient") <- outlier_correct(gradient)
+    attr(value, "hessian") <- outlier_correct(hessian)
   }
 
   #return value
