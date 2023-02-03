@@ -7,7 +7,7 @@
 efficiency(object, level = 0.05, type = "jondrow")
 }
 \arguments{
-\item{object}{fitted mgcv object with family \code{normhnorm()} or \code{normexp()}.}
+\item{object}{fitted mgcv object with family \code{normhnorm()}, \code{normexp()} or \code{comperr_mv()}.}
 
 \item{level}{for the \eqn{(1-level) \cdot 100\%} confidence interval. Must be in (0,1).}
 
@@ -20,7 +20,6 @@ Returns a matrix of the expected (in)efficiency estimates as well the lower and 
 Calculates the expected technical (in)efficiency index.
 }
 \examples{
-\donttest{
 #Set seed, sample size and type of function
 set.seed(1337)
 N=500 #Sample size
@@ -35,8 +34,7 @@ mu=2+0.75*x1+0.4*x2+0.6*x2^2+6*log(x3+2)^(1/4) #production function parameter
 sigma_v=exp(-1.5+0.75*x4) #noise parameter
 sigma_u=exp(-1+sin(2*pi*x5)) #inefficiency parameter
 
-#Simulate responses and create dataset
-y<-rnormhnorm(n=N, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s)
+y<-rcomper(n=N, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s, distr="normhnorm")
 dat<-data.frame(y, x1, x2, x3, x4, x5)
 
 #Write formulae for parameters
@@ -45,13 +43,13 @@ sigma_v_formula<-~1+x4
 sigma_u_formula<-~1+s(x5, bs="ps")
 
 #Fit model
-model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_v_formula),
-                 data=dat, family=normhnorm(s=s), optimizer = c("efs"))
-
+model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+                 data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
+                                   
 #Estimate efficiency
 efficiency(model, type="jondrow")
 efficiency(model, type="battese")
-}
+
 }
 \references{
 \itemize{

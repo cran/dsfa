@@ -12,7 +12,6 @@
 #' @details Calculates the marginal product for parametric terms. For smooth terms the average of the derivative is calculated.
 #'
 #' @examples
-#' \donttest{
 #' #Set seed, sample size and type of function
 #' set.seed(1337)
 #' N=500 #Sample size
@@ -27,8 +26,7 @@
 #' sigma_v=exp(-1.5+0.75*x4) #noise parameter
 #' sigma_u=exp(-1+sin(2*pi*x5)) #inefficiency parameter
 #'
-#' #Simulate responses and create dataset
-#' y<-rnormhnorm(n=N, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s)
+#' y<-rcomper(n=N, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s, distr="normhnorm")
 #' dat<-data.frame(y, x1, x2, x3, x4, x5)
 #'
 #' #Write formulae for parameters
@@ -38,11 +36,11 @@
 #'
 #' #Fit model
 #' model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
-#'                  data=dat, family=normhnorm(s=s), optimizer = c("efs"))
+#'                  data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
 #'
 #' #Get elasticities
 #' elasticity(model)
-#' }
+#' 
 #' @references
 #' \itemize{
 #' \item \insertRef{schmidt2022mvdsfm}{dsfa}
@@ -55,50 +53,42 @@
 elasticity<-function(object, select=NULL, plot=TRUE, se=TRUE){
   #Calculates the elasticity of the inputs.
   #If no select is provided elasticity for all non-parametric terms is returned.
-  if(object$family$family=="comperr_mv"){
-    par_index<-c(attr(object$nsdf,"pstart")[1]:attr(object$nsdf,"pstart")[2], attr(object$nsdf,"pstart")[4]:attr(object$nsdf,"pstart")[5])
-  } else {
-    par_index<-attr(object$nsdf,"pstart")[1]:attr(object$nsdf,"pstart")[2]
+  jj<-attr(stats::model.matrix(object),"lpi")
+  
+  prod_fun_index<-jj[[1]]
+  
+  if(length(object$family$distr)>1){
+    prod_fun_index<-c(prod_fun_index,jj[[4]])
   }
+  
   if(is.null(select)){
-     out<-c()
-     for(i in 1:gratia::n_smooths(object)){
-       if((any(c("mrf.smooth", "random.effect")%in%attr(object$smooth[[i]],"class"))|object$smooth[[i]]$first.para%in%par_index)){
-         if(i>1){
-           invisible(readline(prompt="Hit <Return> to see next plot"))
-         }
-         ela<-gratia::derivatives(object, type = "central", term = i)
-         term<-object$smooth[[i]]$term
-         if(plot){
-           plot(ela$data,ela$derivative, type="l", xlab=term, ylab=paste0("h'(",term,")"), main=paste0("Elasticity of ",term, " with average=",round(mean(ela$derivative),4)))
-           if(se){
-             graphics::lines(ela$data,ela$derivative-ela$se, lty=2)
-             graphics::lines(ela$data,ela$derivative+ela$se, lty=2)
-           }
-           # invisible(readline(prompt="Hit <Return> to see next plot"))
-         } else {
-           out<-c(out, mean(ela$derivative))
-           names(out)[i]<-term
-         }
-       }
-     }
-  } else {
-    if((any(c("mrf.smooth", "random.effect")%in%attr(object$smooth[[i]],"class"))|object$smooth[[i]]$first.para%in%par_index)){
-      i<-select
-      ela<-gratia::derivatives(object, type = "central", term = i)
-      term<-object$smooth[[i]]$term
-      if(plot){
-        plot(ela$data,ela$derivative, type="l", xlab=term, ylab=paste0("h'(",term,")"), main=paste0("Elasticity of ",term, " with average=",round(mean(ela$derivative),4)))
-        if(se){
-          graphics::lines(ela$data,ela$derivative-ela$se, lty=2)
-          graphics::lines(ela$data,ela$derivative+ela$se, lty=2)
-        }
-      } else {
-        out<-mean(ela$derivative)
-        names(out)<-term
+    select<-c()
+    for(i in 1:length(object$smooth)){
+      if((!any(c("mrf.smooth", "random.effect")%in%attr(object$smooth[[i]],"class"))&object$smooth[[i]]$first.para%in%prod_fun_index)){
+        select<-c(select,i)
       }
+    }
+  } 
+  
+  out<-c()
+  for(i in select){
+    if(i!=select[1]){
+      invisible(readline(prompt="Hit <Return> to see next plot"))
+    }
+    ela<-gratia::derivatives(object, type = "central", term = i)
+    term<-object$smooth[[i]]$term
+    
+    if(plot){
+      plot(ela$data, ela$derivative, type="l", xlab=term, ylab=paste0("h'(",term,")"), main=paste0("Elasticity of ",term, " with average=",round(mean(ela$derivative),4)))
+      
+      if(se){
+        graphics::lines(ela$data,ela$derivative-ela$se, lty=2)
+        graphics::lines(ela$data,ela$derivative+ela$se, lty=2)
+      }
+      
     } else {
-      stop(paste("Incorrect input for the argument select", "\n", ""))
+      out<-c(out, mean(ela$derivative))
+      names(out)[which(i%in%select)]<-term
     }
   }
 
@@ -106,6 +96,5 @@ elasticity<-function(object, select=NULL, plot=TRUE, se=TRUE){
   if(!plot){
    return(out)
   }
-  # return(out)
 }
 

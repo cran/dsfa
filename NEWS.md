@@ -3,11 +3,21 @@
 *** denotes really big changes 
 inp "x" -> inp "y" denotes that input argument x has changed to input argument y
 
-## known issues
-* Frank copula esimtation numerically unstable and thus deactivated
+## version 2.0.0
+*** Major overhaul of the package.
 
-* qnormexp does not work for s=-1
+* dnormhnorm, pnormhnorm, dnormexp, pnormexp, dcop are now wrappers for functions written via RcppArmadillo.
+As these are called in the optimization the computation speed could be significantly increased. 
 
+* Reducing dependencies to other packages
+
+* Streamlining naming, comperr -> comper to be in line with erf.
+
+* Adding examples from 'RiceFarms' data set
+
+* Added data set 'manuf'
+
+* Reparametrize is now mom2par and par2mom
 
 ## version 1.0.1
 * Added rsp function (inverse link function)

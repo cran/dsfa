@@ -25,7 +25,6 @@ Calculates and plots the elasticity of a smooth function.
 Calculates the marginal product for parametric terms. For smooth terms the average of the derivative is calculated.
 }
 \examples{
-\donttest{
 #Set seed, sample size and type of function
 set.seed(1337)
 N=500 #Sample size
@@ -40,8 +39,7 @@ mu=2+0.75*x1+0.4*x2+0.6*x2^2+6*log(x3+2)^(1/4) #production function parameter
 sigma_v=exp(-1.5+0.75*x4) #noise parameter
 sigma_u=exp(-1+sin(2*pi*x5)) #inefficiency parameter
 
-#Simulate responses and create dataset
-y<-rnormhnorm(n=N, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s)
+y<-rcomper(n=N, mu=mu, sigma_v=sigma_v, sigma_u=sigma_u, s=s, distr="normhnorm")
 dat<-data.frame(y, x1, x2, x3, x4, x5)
 
 #Write formulae for parameters
@@ -51,11 +49,11 @@ sigma_u_formula<-~1+s(x5, bs="ps")
 
 #Fit model
 model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
-                 data=dat, family=normhnorm(s=s), optimizer = c("efs"))
+                 data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
 
 #Get elasticities
 elasticity(model)
-}
+
 }
 \references{
 \itemize{
