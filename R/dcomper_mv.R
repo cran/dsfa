@@ -27,6 +27,7 @@
 #' `gumbel`, Gumbel copula \cr
 #' `frank`, Frank copula \cr
 #' `joe`, Joe copula \cr
+#' `amh`, Ali-Mikhail-Haq copula \cr
 #' @inheritParams list2derivs
 #' @inheritParams dcop
 #'
@@ -57,7 +58,7 @@
 #' @family distribution
 #' 
 #' @export
-dcomper_mv <- function(x, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2), sigma_u=matrix(c(1,1),ncol=2), delta=matrix(0,nrow=1), s=c(-1,-1), distr=c("normhnorm","normhnorm","normal"), deriv_order=0, tri=NULL, log.p = FALSE){
+dcomper_mv <- function(x, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2), sigma_u=matrix(c(1,1),ncol=2), delta=matrix(0,nrow=1), s=c(-1,-1), distr=c("normhnorm","normhnorm","normal"), rot=0, deriv_order=0, tri=NULL, log.p = FALSE){
   #Density function of the multivariate comper distribution
   
   X<-tryCatch(cbind(x, mu, sigma_v, sigma_u, delta), warning=function(w) {
@@ -67,7 +68,7 @@ dcomper_mv <- function(x, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2
     tri=list(trind_generator(3),trind_generator(3),trind_generator(1),trind_generator(6),trind_generator(7))
   }
 
-  out<-dcomper_mv_cpp(x=X[,1:2, drop=F], m=X[,3:4, drop=F], v=X[,5:6, drop=F], u=X[,7:8, drop=F], delta=X[,9, drop=T], s=s, distr=distr, deriv_order=deriv_order, tri=tri, logp=log.p)
+  out<-dcomper_mv_cpp(x=X[,1:2, drop=F], m=X[,3:4, drop=F], v=X[,5:6, drop=F], u=X[,7:8, drop=F], delta=X[,9, drop=T], s=s, distr=distr, rot=rot, deriv_order=deriv_order, tri=tri, logp=log.p)
 
   #Return ouptut
   return(out)
@@ -76,7 +77,7 @@ dcomper_mv <- function(x, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2
 #' @describeIn dcomper_mv distribution function for the multivariate composed-error distribution.
 #' @param q numeric matrix of probabilities.
 #' @export
-pcomper_mv <- function(q, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2), sigma_u=matrix(c(1,1),ncol=2), delta=0, s=c(-1,-1), distr=c("normhnorm","normhnorm","normal"), deriv_order=0, tri=NULL, log.p = FALSE){
+pcomper_mv <- function(q, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2), sigma_u=matrix(c(1,1),ncol=2), delta=0, s=c(-1,-1), distr=c("normhnorm","normhnorm","normal"), rot=0, deriv_order=0, tri=NULL, log.p = FALSE){
   #Probability function of the multivariate comper distribution
   if(deriv_order>0){
     stop(paste("No derivatives implemented for the pcomper_mv", "\n", ""))
@@ -92,7 +93,7 @@ pcomper_mv <- function(q, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2
   F2<-pcomper(q=X[,2, drop=T], mu=X[,4, drop=T], sigma_v=X[,6, drop=T], sigma_u=X[,8, drop=T], s=s[2], distr=distr[2])
 
   #Evaluate cdf of copula at probability integral transformed observations
-  out<-pcop(W=cbind(F1,F2), delta=X[,9, drop=T], distr_cop=distr[3], log.p = log.p)
+  out<-pcop(W=cbind(F1,F2), delta=X[,9, drop=T], distr_cop=distr[3], rot=rot, log.p = log.p)
   names(out)<-NULL
 
   #Return ouptut
@@ -103,13 +104,13 @@ pcomper_mv <- function(q, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2
 #' @describeIn dcomper_mv random number generation for the multivariate composed-error distribution.
 #' @param n positive integer; number of observations.
 #' @export
-rcomper_mv <- function(n, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2), sigma_u=matrix(c(1,1),ncol=2), delta=matrix(0,nrow=1), s=c(-1,-1), distr=c("normhnorm","normhnorm","normal")){
+rcomper_mv <- function(n, mu=matrix(c(0,0),ncol=2), sigma_v=matrix(c(1,1),ncol=2), sigma_u=matrix(c(1,1),ncol=2), delta=matrix(0,nrow=1), s=c(-1,-1), distr=c("normhnorm","normhnorm","normal"), rot=0){
   #Function to generate n random numbers from the comper distribution
   X<-tryCatch(cbind(0,0, mu, sigma_v, sigma_u, delta), warning=function(w) {
     stop("Input vectors have incompatible lengths")})
   
   #Generate pseudo observations
-  W<-rcop(n=n, delta=X[,9, drop=T], distr_cop=distr[3])
+  W<-rcop(n=n, delta=X[,9, drop=T], distr_cop=distr[3], rot=rot)
 
   #Margin 1
   y1<-qcomper(p=W[,1], mu=X[,3, drop=T], sigma_v=X[,5, drop=T], sigma_u=X[,7, drop=T], s=s[1], distr=distr[1])

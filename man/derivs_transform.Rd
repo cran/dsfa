@@ -23,6 +23,7 @@ derivs_transform(f, type, par, tri, deriv_order)
 \item  \code{zeta}: \eqn{f(x)=\log\{2 \cdot \Phi(x)\}}.
 \item  \code{constant}: \eqn{f(x)=c}.
 \item  \code{chainrule_utility}: \eqn{f(x)=f'(x)=f''(x)=f'''(x)=f''''(x)}.
+\item   onemx: \eqn{1-x}
 }}
 
 \item{par}{numeric vector, additional parameters, e.g. min and max for \code{glogit}.}

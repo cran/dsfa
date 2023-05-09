@@ -38,6 +38,7 @@ using namespace arma;
 //' \item  `zeta`: \eqn{f(x)=\log\{2 \cdot \Phi(x)\}}.
 //' \item  `constant`: \eqn{f(x)=c}.
 //' \item  `chainrule_utility`: \eqn{f(x)=f'(x)=f''(x)=f'''(x)=f''''(x)}.
+//' \item   onemx: \eqn{1-x}
 //' }
 //' @param par numeric vector, additional parameters, e.g. min and max for \code{glogit}.
 //' 
@@ -52,7 +53,7 @@ Rcpp::NumericMatrix  transform (arma::mat x, Rcpp::String type, arma::vec par, i
   arma::mat d3(x.n_rows, x.n_cols ) ;
   arma::mat d4(x.n_rows, x.n_cols ) ;
   
-  Rcpp::StringVector types = {"identity","exp","log","glogit","glogitinv","inv","pnorm","qnorm","mexp","zeta","constant","chainrule_utility"} ;
+  Rcpp::StringVector types = {"identity","exp","log","glogit","glogitinv","inv","pnorm","qnorm","mexp","zeta","constant","chainrule_utility", "onemx"} ;
   
   //identity function
   if(type==types(0)){ 
@@ -223,6 +224,19 @@ Rcpp::NumericMatrix  transform (arma::mat x, Rcpp::String type, arma::vec par, i
       if(deriv_order>2){
         d3 += x ;
         d4 += x ;
+      }
+    }
+  }
+  
+  //One minus x function
+  if(type==types(12)){ 
+    ret += 1-x ;
+    if(deriv_order>0){
+      d1 += -1 ;
+      d2 += 0 ;
+      if(deriv_order>2){
+        d3 += 0 ;
+        d4 += 0 ;
       }
     }
   }

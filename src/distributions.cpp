@@ -585,56 +585,70 @@ Rcpp::NumericMatrix pcomper_cpp (arma::vec q, arma::vec m, arma::vec v, arma::ve
 }
 
 // [[Rcpp::export]]
-NumericMatrix dcomper_mv_cpp (arma::mat x, arma::mat m, arma::mat v, arma::mat u, arma::vec delta, arma::vec s, Rcpp::StringVector distr ,int deriv_order, List tri, bool logp){
+NumericMatrix dcomper_mv_cpp (arma::mat x, arma::mat m, arma::mat v, arma::mat u, arma::vec delta, arma::vec s, Rcpp::StringVector distr ,int rot ,int deriv_order, List tri, bool logp){
   
-  //Marginal log  pdfs
+  //Marginal log pdfs
   Rcpp::NumericMatrix f1 = dcomper_cpp (x.col(0), m.col(0), v.col(0), u.col(0), s(0), distr(0), deriv_order, tri[0], TRUE) ;
   Rcpp::NumericMatrix f2 = dcomper_cpp (x.col(1), m.col(1), v.col(1), u.col(1), s(1), distr(1), deriv_order, tri[1], TRUE) ;
   
+  //Marginal cdfs
+  Rcpp::NumericMatrix F1 = pcomper_cpp (x.col(0), m.col(0), v.col(0), u.col(0), s(0), distr(0), deriv_order, tri[0], FALSE) ;
+  Rcpp::NumericMatrix F2 = pcomper_cpp (x.col(1), m.col(1), v.col(1), u.col(1), s(1), distr(1), deriv_order, tri[1], FALSE) ;
+  
+  //Cop log pdf
+  Rcpp::NumericMatrix cop = dcop_cpp (as<arma::mat>(F1), as<arma::mat>(F2), delta, distr(2), rot, deriv_order, tri[0], TRUE) ;
+  
+  //Create dummy derivs objects
   int n = as<arma::mat>(f1).n_rows ; 
-  arma::mat constant_zeros(n,1,fill::zeros) ;
- 
+  arma::mat constant_zeros(n,1,fill::zeros) ; //zeros
+  arma::mat constant_ones(n,1,fill::ones) ; //ones
+  
+  //Combine independent marginal log pdfs and dummy zeroes
   Rcpp::NumericMatrix pdf_extended = ind2joint(List::create(f1, f2, transform(constant_zeros, "constant", {0}, deriv_order)),
                                                List::create(tri[0],tri[1],tri[2]),
                                                List::create(tri[0],tri[3],tri[4]),
                                                deriv_order) ;
   
-  //Sum up log pdfs
+  //Sum up marginal log pdfs
   Rcpp::NumericMatrix pdf_extended_sum(n, 1, rowSums(pdf_extended).begin()) ;
   pdf_extended_sum.attr("d1") = pdf_extended.attr("d1") ;
   pdf_extended_sum.attr("d2") = pdf_extended.attr("d2") ;
   pdf_extended_sum.attr("d3") = pdf_extended.attr("d3") ;
   pdf_extended_sum.attr("d4") = pdf_extended.attr("d4") ;
-    
-  //Marginal cdfs
-  Rcpp::NumericMatrix F1 = pcomper_cpp (x.col(0), m.col(0), v.col(0), u.col(0), s(0), distr(0), deriv_order, tri[0], FALSE) ;
-  Rcpp::NumericMatrix F2 = pcomper_cpp (x.col(1), m.col(1), v.col(1), u.col(1), s(1), distr(1), deriv_order, tri[1], FALSE) ;
   
-  arma::mat constant_ones(n,1,fill::ones) ;
-  
-  //Combine marginal cdfs
+  //Combine independent marginal cdfs and dummy ones
   Rcpp::NumericMatrix cdf_extended = ind2joint(List::create(F1, F2, transform(constant_ones, "identity", {0}, deriv_order)),
                                                List::create(tri[0],tri[1],tri[2]),
                                                List::create(tri[0],tri[3],tri[4]),
                                                deriv_order) ;
-  //Cop log pdf
-  Rcpp::NumericMatrix cop = dcop_cpp (as<arma::mat>(F1), as<arma::mat>(F2), delta, distr(2), deriv_order, tri[2], TRUE) ;
   
+  //Extend cop log pdf to fit size of marginal cdfs
   arma::mat cop_d0 = as<arma::mat>(cop) ;
   arma::mat cop_d1 = as<arma::mat>(cop.attr("d1")) ;
   arma::mat cop_d2 = as<arma::mat>(cop.attr("d2")) ;
   
-  arma::uvec i1 ={0, 0, 0, 1, 1, 1, 2} ;
-  arma::uvec i2 = {0, 0, 0, 1, 1, 1, 2, 0, 0, 1, 1, 1, 2, 0, 1, 1, 1, 2, 3, 3, 3, 4, 3, 3, 4, 3, 4, 5} ;
+  arma::uvec i1 = {0, 0, 0, 1, 1, 1, 2} ;
+  
+  arma::uvec i2 = {0, 0, 0, 1, 1, 1, 2,
+                      0, 0, 1, 1, 1, 2,
+                         0, 1, 1, 1, 2,
+                            3, 3, 3, 4,
+                               3, 3, 4,
+                                  3, 4,
+                                     5} ;
     
   arma::mat cop_extended_d1 = cop_d1.cols(i1) ;
   arma::mat cop_extended_d2 = cop_d2.cols(i2) ;
   arma::mat cop_extended_d3(n, 84) ;
-  arma::mat cop_extended_d4(n,210) ;
-  NumericMatrix cop_extended = list2derivs(List::create(cop_d0 , cop_extended_d1, cop_extended_d2, cop_extended_d3, cop_extended_d4), 4) ;
+  arma::mat cop_extended_d4(n, 210) ;
+  
+  NumericMatrix cop_extended = list2derivs(List::create(cop_d0 , cop_extended_d1,
+                                                                 cop_extended_d2,
+                                                                 cop_extended_d3,
+                                                                 cop_extended_d4), deriv_order) ;
   
   //Summarize loglike
-  NumericMatrix out = sumrule(List::create(chainrule(List::create(cop_extended, cdf_extended),tri[4], deriv_order), 
+  NumericMatrix out = sumrule(List::create(chainrule(List::create(cop_extended, cdf_extended), tri[4], deriv_order), 
                                            pdf_extended_sum) ,tri[4], deriv_order) ;
   
   return out ; 

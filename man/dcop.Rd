@@ -10,14 +10,15 @@ dcop(
   W,
   delta,
   distr_cop = "normal",
+  rot = 0,
   deriv_order = 0,
   tri = NULL,
   log.p = FALSE
 )
 
-pcop(W, delta = 0, distr_cop = "normal", log.p = FALSE)
+pcop(W, delta = 0, distr_cop = "normal", rot = 0, log.p = FALSE)
 
-rcop(n, delta = 0, distr_cop = "normal")
+rcop(n, delta = 0, distr_cop = "normal", rot = 0)
 }
 \arguments{
 \item{W}{numeric matrix of pseudo observations. Must have two columns.}
@@ -30,7 +31,10 @@ rcop(n, delta = 0, distr_cop = "normal")
 \code{clayton} = Clayton copula \cr
 \code{gumbel} = Gumbel copula \cr
 \code{frank} = Frank copula \cr
-\code{joe} = Joe copula \cr}
+\code{joe} = Joe copula \cr
+\code{amh} = Ali-Mikhail-Haq copula \cr}
+
+\item{rot, }{integer determining the rotation for Archimedian copulas. Can be \code{90}, \code{180} or \code{270}.}
 
 \item{deriv_order}{integer; maximum order of derivative. Available are \code{0},\code{2} and \code{4}.}
 

@@ -12,6 +12,7 @@
 #' \item  `gumbel`, min=1 and max=17
 #' \item  `frank`, min=-35 and max=35
 #' \item  `joe`, min=1e-16 and max=30
+#' \item  `amh`, min=-1 and max=1
 #' }
 #' 
 #' @inheritParams dcop
@@ -36,7 +37,7 @@ delta_bounds<-function(distr_cop){
   }
   
   if(distr_cop=="clayton"){
-    min<-0+1e-16
+    min<-0
     max<-28
   }
   
@@ -48,14 +49,16 @@ delta_bounds<-function(distr_cop){
   if(distr_cop=="frank"){
     min<--35
     max<-35
-    
-    stop(paste("The pdf of the frank copula is not functional yet.", "\n", ""))
-    
   }
   
   if(distr_cop=="joe"){
-    min<-1+1e-6
+    min<-1
     max<-30
+  }
+  
+  if(distr_cop=="amh"){
+    min<--1
+    max<-1
   }
   
   out<-c(min,max)

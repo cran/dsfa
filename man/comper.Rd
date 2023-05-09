@@ -97,12 +97,35 @@ sigma_u_formula<-~bimas
 model_normhnorm<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 data=RiceFarms, family=comper(s=-1, distr="normhnorm"), optimizer = "efs")
 
-#Fit model with normexp dstribution
-model_normexp<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
-data=RiceFarms, family=comper(s=-1, distr="normexp"), optimizer = c("outer","newton"))
+#Summary of model
+summary(model_normhnorm)
 
-#Compare models
-AIC(model_normhnorm)<AIC(model_normexp) #normhnorm fits the data better
+#Plot smooths
+plot(model_normhnorm)
+}
+
+### Third example with real data of cost function
+\donttest{
+data("electricity", package = "sfaR") #load data
+
+#Log inputs and outputs as in Greene 1990 eq. 46
+electricity$lcof<-log(electricity$cost/electricity$fprice)
+electricity$lo<-log(electricity$output)
+electricity$llf<-log(electricity$lprice/electricity$fprice)
+electricity$lcf<-log(electricity$cprice/electricity$fprice)
+
+#Set to cost function
+s=1
+
+#Write formulae for parameters
+mu_formula<-lcof ~ s(lo, bs="ps") + s(llf, bs="ps") + s(lcf, bs="ps") #non-linear effects
+sigma_v_formula<-~1
+sigma_u_formula<-~s(lo, bs="ps") + s(lshare, bs="ps") + s(cshare, bs="ps")
+
+#Fit model with normhnorm dstribution
+model_normhnorm<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+                           data=electricity, family=comper(s=s, distr="normhnorm"),
+                           optimizer = "efs")
 
 #Summary of model
 summary(model_normhnorm)

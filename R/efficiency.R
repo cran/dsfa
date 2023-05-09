@@ -3,10 +3,10 @@
 #' Calculates the expected technical (in)efficiency index.
 #'
 #'
-#' @return Returns a matrix of the expected (in)efficiency estimates as well the lower and upper bound of the \eqn{(1-level)\cdot 100\%} confidence interval.
+#' @return Returns a matrix of the expected (in)efficiency estimates as well the lower and upper bound of the \eqn{(1-\alpha)\cdot 100\%} confidence interval.
 #'
 #' @param type default is "jondrow" for \eqn{E[u|\epsilon]}, alternatively "battese" for \eqn{E[\exp(-u)|\epsilon]}.
-#' @param level for the \eqn{(1-level) \cdot 100\%} confidence interval. Must be in (0,1).
+#' @param alpha for the \eqn{(1-\alpha) \cdot 100\%} confidence interval. Must be in (0,1).
 #' @inheritParams elasticity
 #' 
 #' @examples
@@ -49,7 +49,7 @@
 #' \item \insertRef{battese1988prediction}{dsfa}
 #' }
 #' @export
-efficiency<-function (object, level=0.05, type="jondrow"){
+efficiency<-function (object, alpha=0.05, type="jondrow"){
   #Takes fitted object and calculates the expected
   #technical efficiency of each production unit
   #based on Stochastic Frontier Analysis using Stata
@@ -83,9 +83,9 @@ efficiency<-function (object, level=0.05, type="jondrow"){
     }
     
     #Counter numerical over- and underflow of qnorm
-    lower<-1-(1-level/2)*(1-stats::pnorm(-mu_c/sigma_c))
+    lower<-1-(1-alpha/2)*(1-stats::pnorm(-mu_c/sigma_c))
     lower[lower>=1-1e-16]<-1-1e-16
-    upper<-1-level/2*(1-stats::pnorm(-mu_c/sigma_c))
+    upper<-1-alpha/2*(1-stats::pnorm(-mu_c/sigma_c))
     upper[upper>=0+1e-16]<-0+1e-16
     
     CI_lower<-mu_c+stats::qnorm(lower)*sigma_c

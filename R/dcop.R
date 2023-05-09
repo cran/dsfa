@@ -21,6 +21,8 @@
 #' `gumbel` = Gumbel copula \cr
 #' `frank` = Frank copula \cr
 #' `joe` = Joe copula \cr
+#' `amh` = Ali-Mikhail-Haq copula \cr
+#' @param rot, integer determining the rotation for Archimedian copulas. Can be \code{90}, \code{180} or \code{270}.
 #' @inheritParams dcomper
 #' 
 #' @examples
@@ -38,23 +40,32 @@
 #' @family copula
 #' 
 #' @export
-dcop<-function(W, delta, distr_cop="normal", deriv_order=0, tri=NULL, log.p=FALSE){
+dcop<-function(W, delta, distr_cop="normal", rot=0, deriv_order=0, tri=NULL, log.p=FALSE){
   #Density of copula
   if (any(W <= 0)|any(W >= 1)){
     stop(paste("W must be in [-1, 1]", "\n", ""))
   }
   
-  distr_cop<-match.arg(distr_cop,c("independent","normal","clayton","gumbel","frank","joe"))
+  distr_cop<-match.arg(distr_cop,c("independent","normal","clayton","gumbel","frank","joe","amh"))
+  
+  minmax<-delta_bounds(distr_cop)
+  if(any(delta<minmax[1])|any(delta>minmax[2])){
+    stop(paste("delta must be in [",minmax[1],",",minmax[2],"]", "\n", ""))
+  }
   
   X<-tryCatch(cbind(W, delta), warning=function(w) {
     stop("Input vectors have incompatible lengths")
     })
   
+  if(!rot%in%c(0, 90,180,270)){
+    stop(paste("rotation must be in {0, 90, 180, 270}", "\n", ""))
+  }
+  
   if(is.null(tri)){
     tri=trind_generator(3)
   }
   
-  out<-dcop_cpp (X[,1], X[,2], X[,3], distr_cop, deriv_order, tri, log.p)
+  out<-dcop_cpp (X[,1], X[,2], X[,3], distr_cop, rot=rot, deriv_order, tri, log.p)
   
   #return out
   return(out)
@@ -62,18 +73,27 @@ dcop<-function(W, delta, distr_cop="normal", deriv_order=0, tri=NULL, log.p=FALS
 
 #' @describeIn dcop distribution function for copula.
 #' @export
-pcop<-function(W, delta=0, distr_cop="normal", log.p = FALSE){
+pcop<-function(W, delta=0, distr_cop="normal", rot=0, log.p = FALSE){
   #Distribution function of bivariate copula
   if (any(W <= 0)|any(W >= 1)){
     stop(paste("W must be in [-1, 1]", "\n", ""))
   }
   
-  distr_cop<-match.arg(distr_cop,c("independent","normal","clayton","gumbel","frank","joe"))
+  distr_cop<-match.arg(distr_cop,c("independent","normal","clayton","gumbel","frank","joe","amh"))
+  
+  minmax<-delta_bounds(distr_cop)
+  if(any(delta<minmax[1])|any(delta>minmax[2])){
+    stop(paste("delta must be in [",minmax[1],",",minmax[2],"]", "\n", ""))
+  }
   
   X<-tryCatch(cbind(W, delta), warning=function(w) {
     stop("Input vectors have incompatible lengths")
     })
 
+  if(!rot%in%c(0,90,180,270)){
+    stop(paste("rotation must be in {0, 90, 180, 270}", "\n", ""))
+  }
+  
   out<-sapply(1:nrow(X), function(n) pcop_copula(W=X[n,-3], delta=X[n,3], distr_cop=distr_cop, log.p=log.p))
 
   #Return out
@@ -83,14 +103,23 @@ pcop<-function(W, delta=0, distr_cop="normal", log.p = FALSE){
 #' @describeIn dcop random number generation for copula.
 #' @inheritParams rcomper
 #' @export
-rcop<-function(n, delta=0, distr_cop="normal"){
+rcop<-function(n, delta=0, distr_cop="normal", rot=0){
   #Random number generation function of copula
-  distr_cop<-match.arg(distr_cop,c("independent","normal","clayton","gumbel","frank","joe"))
+  distr_cop<-match.arg(distr_cop,c("independent","normal","clayton","gumbel","frank","joe","amh"))
+  
+  minmax<-delta_bounds(distr_cop)
+  if(any(delta<minmax[1])|any(delta>minmax[2])){
+    stop(paste("delta must be in [",minmax[1],",",minmax[2],"]", "\n", ""))
+  }
   
   X<-tryCatch(cbind(rep(0,n), delta), warning=function(w) {
     stop("Input vectors have incompatible lengths")
     })
 
+  if(!rot%in%c(0,90,180,270)){
+    stop(paste("rotation must be in {0, 90, 180, 270}", "\n", ""))
+  }
+  
   N<-n
   out<-lapply(1:N, function(i) rcop_copula(delta=X[i,2, drop=T], distr_cop=distr_cop))
   out<-matrix(unlist(out), byrow=TRUE, nrow=N)
@@ -98,7 +127,7 @@ rcop<-function(n, delta=0, distr_cop="normal"){
   return(out)
 }
 
-pcop_copula<-function(W, delta=0, distr_cop="normal", log.p = FALSE){
+pcop_copula<-function(W, delta=0, distr_cop="normal", rot=0, log.p = FALSE){
   #dcop wrapper function for distribution function for copula with scalar inputs
 
   if(distr_cop=="independent"){
@@ -126,6 +155,23 @@ pcop_copula<-function(W, delta=0, distr_cop="normal", log.p = FALSE){
     cop_object<-copula::joeCopula(param=delta, dim = 2)
   }
 
+  if(distr_cop=="amh"){
+    cop_object<-copula::amhCopula(param=delta, dim = 2)
+  }
+  
+  if(rot==90){
+    cop_object<-copula::rotCopula(cop_object, flip = c(TRUE, FALSE))
+  }
+  
+  if(rot==180){
+    cop_object<-copula::rotCopula(cop_object, flip = c(TRUE, TRUE))
+  }
+  
+  if(rot==270){
+    cop_object<-copula::rotCopula(cop_object, flip = c(FALSE, TRUE))
+  }
+  
+  
   #Wrapper for Copula package function
   out<-copula::pCopula(u=W, copula=cop_object)
 
@@ -137,7 +183,7 @@ pcop_copula<-function(W, delta=0, distr_cop="normal", log.p = FALSE){
 }
 
 
-rcop_copula<-function(delta=0, distr_cop="normal"){
+rcop_copula<-function(delta=0, distr_cop="normal", rot=0){
   #wrapper function for random number generation for copula with scalar inputs
 
   if(distr_cop=="independent"){
@@ -165,6 +211,22 @@ rcop_copula<-function(delta=0, distr_cop="normal"){
     cop_object<-copula::joeCopula(param=delta, dim = 2)
   }
 
+  if(distr_cop=="amh"){
+    cop_object<-copula::amhCopula(param=delta, dim = 2)
+  }
+  
+  if(rot==90){
+    cop_object<-copula::rotCopula(cop_object, flip = c(TRUE, FALSE))
+  }
+  
+  if(rot==180){
+    cop_object<-copula::rotCopula(cop_object, flip = c(TRUE, TRUE))
+  }
+  
+  if(rot==270){
+    cop_object<-copula::rotCopula(cop_object, flip = c(FALSE, TRUE))
+  }
+  
   #Wrapper for Copula package function
   out<-copula::rCopula(n=1, copula=cop_object)
 

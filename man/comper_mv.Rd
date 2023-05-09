@@ -7,7 +7,8 @@
 comper_mv(
   link = list("identity", "log", "log", "identity", "log", "log", "glogit"),
   s = c(-1, -1),
-  distr = c("normhnorm", "normhnorm", "normal")
+  distr = c("normhnorm", "normhnorm", "normal"),
+  rot = 0
 )
 }
 \arguments{
@@ -24,7 +25,10 @@ The last element determines the distribution of the copula:\cr
 \code{clayton}, Clayton copula \cr
 \code{gumbel}, Gumbel copula \cr
 \code{frank}, Frank copula \cr
-\code{joe}, Joe copula \cr}
+\code{joe}, Joe copula \cr
+\code{amh}, Ali-Mikhail-Haq copula \cr}
+
+\item{rot}{integer determining the rotation for Archimedian copulas. Can be \code{90}, \code{180} or \code{270}.}
 }
 \value{
 An object inheriting from class \code{general.family} of the mgcv package, which can be used in the 'mgcv' and 'dsfa' package.

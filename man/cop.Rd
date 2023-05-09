@@ -4,7 +4,7 @@
 \alias{cop}
 \title{cop}
 \usage{
-cop(link = list("glogit"), W, distr_cop = "normal")
+cop(link = list("glogit"), W, distr_cop = "normal", rot = 0)
 }
 \arguments{
 \item{link}{formula, specifying the link for \eqn{\delta} parameter. See details.}
@@ -17,7 +17,10 @@ cop(link = list("glogit"), W, distr_cop = "normal")
 \code{clayton} = Clayton copula \cr
 \code{gumbel} = Gumbel copula \cr
 \code{frank} = Frank copula \cr
-\code{joe} = Joe copula \cr}
+\code{joe} = Joe copula \cr
+\code{amh} = Ali-Mikhail-Haq copula \cr}
+
+\item{rot}{integer determining the rotation for Archimedian copulas. Can be \code{90}, \code{180} or \code{270}.}
 }
 \value{
 An object inheriting from class \code{general.family} of the mgcv package, which can be used in the 'mgcv' and 'dsfa' package.
@@ -38,25 +41,28 @@ as \code{\link[mgcv:gam]{gam()}} was more or less abused here.
 #Set seed, sample size and type of copula
 set.seed(1337)
 N=500 #Sample size
+cop="gumbel" #copula
+rot=180 #rotation
 
 #Generate covariates
 x1<-runif(N,-1,1); x2<-runif(N,-1,1)
 
 #Set parameters of the copula
 eta<-matrix(1+2.5*x1+1.75*sin(pi*x2),nrow=N)
-delta<-transform(x=eta, type="glogitinv", par=delta_bounds("normal"), deriv_order = 0)
+delta<-transform(x=eta, type="glogitinv", par=as.numeric(delta_bounds(cop)), deriv_order = 0)
 
 #Simulate pseudo observations W and create dataset
-dat<-as.data.frame(rcop(n=N, delta=delta, distr_cop="normal"))
+dat<-as.data.frame(rcop(n=N, delta=delta, distr_cop=cop, rot=rot))
 dat$y<-1 #Add dummy response variable
 
 #Write formulae for parameters
 delta_formula<-y~x1+s(x2,bs="ps")
 
 #Fit model
-model<-mgcv::gam(delta_formula, data=dat, 
+model<-mgcv::gam(delta_formula, data=dat,
                  family=cop(W=dat[,1:2],
-                            distr_cop="normal"), optimizer="efs")
+                            distr_cop=cop, rot=rot),
+                 optimizer="efs")
 
 #Smooth effects
 #Effect of x2 on the predictor of delta

@@ -13,7 +13,8 @@ delta_bounds(distr_cop)
 \code{clayton} = Clayton copula \cr
 \code{gumbel} = Gumbel copula \cr
 \code{frank} = Frank copula \cr
-\code{joe} = Joe copula \cr}
+\code{joe} = Joe copula \cr
+\code{amh} = Ali-Mikhail-Haq copula \cr}
 }
 \value{
 Returns numeric vector of length two with first argument being the min and the second argument being the max of the parameter space.
@@ -30,6 +31,7 @@ Although the parameter space is larger in theory for some copulas, numeric under
 \item  \code{gumbel}, min=1 and max=17
 \item  \code{frank}, min=-35 and max=35
 \item  \code{joe}, min=1e-16 and max=30
+\item  \code{amh}, min=-1 and max=1
 }
 }
 \examples{

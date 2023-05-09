@@ -14,6 +14,7 @@ dcomper_mv(
   delta = matrix(0, nrow = 1),
   s = c(-1, -1),
   distr = c("normhnorm", "normhnorm", "normal"),
+  rot = 0,
   deriv_order = 0,
   tri = NULL,
   log.p = FALSE
@@ -27,6 +28,7 @@ pcomper_mv(
   delta = 0,
   s = c(-1, -1),
   distr = c("normhnorm", "normhnorm", "normal"),
+  rot = 0,
   deriv_order = 0,
   tri = NULL,
   log.p = FALSE
@@ -39,7 +41,8 @@ rcomper_mv(
   sigma_u = matrix(c(1, 1), ncol = 2),
   delta = matrix(0, nrow = 1),
   s = c(-1, -1),
-  distr = c("normhnorm", "normhnorm", "normal")
+  distr = c("normhnorm", "normhnorm", "normal"),
+  rot = 0
 )
 }
 \arguments{
@@ -64,7 +67,10 @@ The last element determines the distribution of the copula:\cr
 \code{clayton}, Clayton copula \cr
 \code{gumbel}, Gumbel copula \cr
 \code{frank}, Frank copula \cr
-\code{joe}, Joe copula \cr}
+\code{joe}, Joe copula \cr
+\code{amh}, Ali-Mikhail-Haq copula \cr}
+
+\item{rot}{integer determining the rotation for Archimedian copulas. Can be \code{90}, \code{180} or \code{270}.}
 
 \item{deriv_order}{integer; maximum order of derivative. Available are \code{0},\code{2} and \code{4}.}
 

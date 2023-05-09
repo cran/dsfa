@@ -66,7 +66,7 @@ Probablitiy density function, distribution, quantile function and random number 
 }
 \details{
 A random variable \eqn{X} follows a normal-exponential distribution if \eqn{X = V + s \cdot U }, where \eqn{V \sim N(\mu, \sigma_V^2)} and \eqn{U \sim Exp(\sigma_u)}.
-The density is given by \deqn{f_X(x)=\frac{\sigma_u}{2} \exp \{\sigma_u (s \mu) + \frac{1}{2} \sigma_u^2 \sigma_V^2-\sigma_u (s x) \} 2 \Phi(\frac{1}{\sigma_V} (-s \mu)-\sigma_u \sigma_V+\frac{1}{\sigma_V}(s x)) \qquad,}
+The density is given by \deqn{f_X(x)=\frac{\sigma_U}{2} \exp \{\sigma_U (s \mu) + \frac{1}{2} \sigma_U^2 \sigma_V^2-\sigma_U (s x) \} 2 \Phi(\frac{1}{\sigma_V} (-s \mu)-\sigma_U \sigma_V+\frac{1}{\sigma_V}(s x)) \qquad,}
 where \eqn{s=-1} for production and \eqn{s=1} for cost function. In the latter case the distribution is equivalent to the Exponentially modified Gaussian distribution.
 }
 \section{Functions}{

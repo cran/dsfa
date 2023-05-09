@@ -4,17 +4,17 @@
 \alias{efficiency}
 \title{efficiency}
 \usage{
-efficiency(object, level = 0.05, type = "jondrow")
+efficiency(object, alpha = 0.05, type = "jondrow")
 }
 \arguments{
-\item{object}{fitted mgcv object with family \code{normhnorm()}, \code{normexp()} or \code{comperr_mv()}.}
+\item{object}{fitted mgcv object with family \code{comper()} or \code{comper_mv()}.}
 
-\item{level}{for the \eqn{(1-level) \cdot 100\%} confidence interval. Must be in (0,1).}
+\item{alpha}{for the \eqn{(1-\alpha) \cdot 100\%} confidence interval. Must be in (0,1).}
 
 \item{type}{default is "jondrow" for \eqn{E[u|\epsilon]}, alternatively "battese" for \eqn{E[\exp(-u)|\epsilon]}.}
 }
 \value{
-Returns a matrix of the expected (in)efficiency estimates as well the lower and upper bound of the \eqn{(1-level)\cdot 100\%} confidence interval.
+Returns a matrix of the expected (in)efficiency estimates as well the lower and upper bound of the \eqn{(1-\alpha)\cdot 100\%} confidence interval.
 }
 \description{
 Calculates the expected technical (in)efficiency index.

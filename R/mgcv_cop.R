@@ -19,25 +19,28 @@
 #' #Set seed, sample size and type of copula
 #' set.seed(1337)
 #' N=500 #Sample size
+#' cop="gumbel" #copula
+#' rot=180 #rotation
 #' 
 #' #Generate covariates
 #' x1<-runif(N,-1,1); x2<-runif(N,-1,1)
 #' 
 #' #Set parameters of the copula
 #' eta<-matrix(1+2.5*x1+1.75*sin(pi*x2),nrow=N)
-#' delta<-transform(x=eta, type="glogitinv", par=delta_bounds("normal"), deriv_order = 0)
+#' delta<-transform(x=eta, type="glogitinv", par=as.numeric(delta_bounds(cop)), deriv_order = 0)
 #' 
 #' #Simulate pseudo observations W and create dataset
-#' dat<-as.data.frame(rcop(n=N, delta=delta, distr_cop="normal"))
+#' dat<-as.data.frame(rcop(n=N, delta=delta, distr_cop=cop, rot=rot))
 #' dat$y<-1 #Add dummy response variable
 #' 
 #' #Write formulae for parameters
 #' delta_formula<-y~x1+s(x2,bs="ps")
 #' 
 #' #Fit model
-#' model<-mgcv::gam(delta_formula, data=dat, 
+#' model<-mgcv::gam(delta_formula, data=dat,
 #'                  family=cop(W=dat[,1:2],
-#'                             distr_cop="normal"), optimizer="efs")
+#'                             distr_cop=cop, rot=rot),
+#'                  optimizer="efs")
 #' 
 #' #Smooth effects
 #' #Effect of x2 on the predictor of delta
@@ -58,15 +61,14 @@
 #' }
 #' @export
 #comper distribution object for mgcv
-cop <- function(link = list("glogit"), W, distr_cop="normal"){
+cop <- function(link = list("glogit"), W, distr_cop="normal", rot=0){
   #Object for mgcv::gam such that the copula can be estimated.
   
   #Number of parameters
   npar <- 1
   
   #Get boundaries of parameter space
-  a<-delta_bounds(distr_cop)[1]
-  b<-delta_bounds(distr_cop)[2]
+  minmax<-delta_bounds(distr_cop)
   
   #Link functions
   if (length(link) != npar) stop("cop requires 1 links specified as character strings")
@@ -79,12 +81,12 @@ cop <- function(link = list("glogit"), W, distr_cop="normal"){
     stats[[1]]$valideta <- function(eta) TRUE
     stats[[1]]$link = link[[1]]
     
-    stats[[1]]$linkfun <- eval(parse(text = paste("function(mu) log((-",a,"+mu)/(",b,"-mu))")))#eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
-    stats[[1]]$linkinv <- eval(parse(text = paste("function(eta) exp(eta)/(1+exp(eta))*(",b,"-",a,")+",a)))
-    stats[[1]]$mu.eta <- eval(parse(text = paste("function(eta) exp(eta)*(",b,"-",a,")/(exp(eta)+1)^2")))
-    stats[[1]]$d2link <- eval(parse(text = paste("function(mu) 1/(",b,"-mu)^2-1/(",a,"-mu)^2")))#eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
-    stats[[1]]$d3link <- eval(parse(text = paste("function(mu) 2*(1/(",b,"-mu)^3+1/(-",a,"+mu)^3)"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
-    stats[[1]]$d4link <- eval(parse(text = paste("function(mu) 6/(",b,"-mu)^4-6/(",a,"-mu)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
+    stats[[1]]$linkfun <- eval(parse(text = paste("function(mu) log((-",minmax[1],"+mu)/(",minmax[2],"-mu))")))#eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
+    stats[[1]]$linkinv <- eval(parse(text = paste("function(eta) exp(eta)/(1+exp(eta))*(",minmax[2],"-",minmax[1],")+",minmax[1])))
+    stats[[1]]$mu.eta <- eval(parse(text = paste("function(eta) exp(eta)*(",minmax[2],"-",minmax[1],")/(exp(eta)+1)^2")))
+    stats[[1]]$d2link <- eval(parse(text = paste("function(mu) 1/(",minmax[2],"-mu)^2-1/(",minmax[1],"-mu)^2")))#eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
+    stats[[1]]$d3link <- eval(parse(text = paste("function(mu) 2*(1/(",minmax[2],"-mu)^3+1/(-",minmax[1],"+mu)^3)"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
+    stats[[1]]$d4link <- eval(parse(text = paste("function(mu) 6/(",minmax[2],"-mu)^4-6/(",minmax[1],"-mu)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
   } else {
     stop(link[[1]], " link not available cop distribution")
   }
@@ -126,7 +128,7 @@ cop <- function(link = list("glogit"), W, distr_cop="normal"){
     delta      <- matrix(family$linfo[[1]]$linkinv( eta ), nrow=n)
     
     #Evaluate ll
-    l0<-dcop_cpp(u=family$W[,1], v=family$W[,2], p=delta, distr_cop=family$distr_cop, deriv_order=2, tri=family$tri_mat, logp = TRUE)
+    l0<-dcop_cpp(u=family$W[,1], v=family$W[,2], p=delta, distr_cop=family$distr_cop, rot=family$rot, deriv_order=2, tri=family$tri_mat, logp = TRUE)
     
     #Assign sum of individual loglikehood contributions to l
     l<-sum(l0)
@@ -219,10 +221,36 @@ cop <- function(link = list("glogit"), W, distr_cop="normal"){
         cop_object<-copula::joeCopula(dim = 2)
       }
       
+      if(family$distr_cop=="amh"){
+        cop_object<-copula::amhCopula(dim = 2)
+      }
+      
+      if(family$rot==90){
+        cop_object<-copula::rotCopula(cop_object, flip = c(TRUE, FALSE))
+      }
+      
+      if(family$rot==180){
+        cop_object<-copula::rotCopula(cop_object, flip = c(TRUE, TRUE))
+      }
+      
+      if(family$rot==270){
+        cop_object<-copula::rotCopula(cop_object, flip = c(FALSE, TRUE))
+      }
+      
+      # myfun=paste0("copula::",cop_distr,"Copula")
+      # a<-do.call(myfun, args=list(dim = 2))
+      #            
+      # a<-do.call(paste0("copula::",cop_distr,"Copula"))
+      # a<-do.call(paste0(cop_distr,"Copula"), args=list(dim = 2), envir=copula)
+      # get(paste0(cop_distr,"Copula"))
       
       #Wrapper for Copula package function
       delta_start<-suppressWarnings(copula::fitCopula(copula=cop_object, data=as.matrix(family$W))@estimate)
-      start <- c(delta_start,rep(0,ncol(x)-1))
+      eta_start=dsfa::transform(x=matrix(delta_start),
+                      type="glogit",
+                      par=as.numeric(delta_bounds(family$distr_cop)), deriv_order = 0)
+      
+      start <- c(eta_start,rep(0,ncol(x)-1))
     }
   }) 
   
@@ -236,9 +264,10 @@ cop <- function(link = list("glogit"), W, distr_cop="normal"){
   
   structure(list(family="cop", ll=ll, link=paste(link), nlp=npar,
                  tri = mgcv::trind.generator(npar), # symmetric indices for accessing derivative arrays
-                 tri_mat = trind_generator(npar), # symmetric indices for accessing derivative matrices
+                 tri_mat = trind_generator(3), # symmetric indices for accessing derivative matrices
                  initialize=initialize, #initial parameters
                  distr_cop = distr_cop, #specifiying copula distribution
+                 rot=rot,
                  W=W, #pseudo observations
                  preinitialize=preinitialize, # specify model matrix
                  residuals=residuals,

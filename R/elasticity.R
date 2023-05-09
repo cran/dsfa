@@ -2,7 +2,7 @@
 #'
 #' Calculates and plots the elasticity of a smooth function.
 #'
-#' @param object fitted mgcv object with family \code{normhnorm()}, \code{normexp()} or \code{comperr_mv()}.
+#' @param object fitted mgcv object with family \code{comper()} or \code{comper_mv()}.
 #' @param select specifying the smooth function for which the elasticity is calculated. If \code{term=NULL} the elasticities for all smooths of \eqn{\mu} are returned (excluding random and spatial effects).
 #' @param plot logical; if TRUE, plots the elasticities. If FALSE, returns the average elasticity.
 #' @param se logical; if TRUE, adds standard errors to the plot of elasticities.

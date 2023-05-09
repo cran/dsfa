@@ -111,15 +111,14 @@
 #' }
 #' @export
 #comper distribution object for mgcv
-comper_mv<- function(link = list("identity", "log", "log","identity", "log", "log","glogit"), s = c(-1,-1), distr=c("normhnorm","normhnorm","normal")){
+comper_mv<- function(link = list("identity", "log", "log","identity", "log", "log","glogit"), s = c(-1,-1), distr=c("normhnorm","normhnorm","normal"), rot=0){
   #Object for mgcv::gam such that the composed-error distribution can be estimated.
   
   #Number of parameters
   npar <- 7
   
   #Get boundaries of parameter space
-  a<-delta_bounds(distr[3])[1]
-  b<-delta_bounds(distr[3])[2]
+  minmax<-delta_bounds(distr[3])
   
   #Link functions
   if (length(link) != npar) stop("comperr_mv requires 7 links specified as character strings")
@@ -142,12 +141,12 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
     stats[[7]]$valideta <- function(eta) TRUE
     stats[[7]]$link = link[[7]]
     
-    stats[[7]]$linkfun <- eval(parse(text = paste("function(mu) log((-",a,"+mu)/(",b,"-mu))")))#eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
-    stats[[7]]$linkinv <- eval(parse(text = paste("function(eta) exp(eta)/(1+exp(eta))*(",b,"-",a,")+",a)))
-    stats[[7]]$mu.eta <- eval(parse(text = paste("function(eta) exp(eta)*(",b,"-",a,")/(exp(eta)+1)^2")))
-    stats[[7]]$d2link <- eval(parse(text = paste("function(mu) 1/(",b,"-mu)^2-1/(",a,"-mu)^2")))#eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
-    stats[[7]]$d3link <- eval(parse(text = paste("function(mu) 2*(1/(",b,"-mu)^3+1/(-",a,"+mu)^3)"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
-    stats[[7]]$d4link <- eval(parse(text = paste("function(mu) 6/(",b,"-mu)^4-6/(",a,"-mu)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
+    stats[[7]]$linkfun <- eval(parse(text = paste("function(mu) log((-",minmax[1],"+mu)/(",minmax[2],"-mu))")))#eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
+    stats[[7]]$linkinv <- eval(parse(text = paste("function(eta) exp(eta)/(1+exp(eta))*(",minmax[2],"-",minmax[1],")+",minmax[1])))
+    stats[[7]]$mu.eta <- eval(parse(text = paste("function(eta) exp(eta)*(",minmax[2],"-",minmax[1],")/(exp(eta)+1)^2")))
+    stats[[7]]$d2link <- eval(parse(text = paste("function(mu) 1/(",minmax[2],"-mu)^2-1/(",minmax[1],"-mu)^2")))#eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
+    stats[[7]]$d3link <- eval(parse(text = paste("function(mu) 2*(1/(",minmax[2],"-mu)^3+1/(-",minmax[1],"+mu)^3)"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
+    stats[[7]]$d4link <- eval(parse(text = paste("function(mu) 6/(",minmax[2],"-mu)^4-6/(",minmax[1],"-mu)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
   }
   else stop(link[[7]], " link not available comper_mv distribution")
   
@@ -204,7 +203,7 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
     }
     
     #Evaluate ll
-    l0<-dcomper_mv_cpp(x=y, m=theta[,c(1,4), drop=FALSE], v=theta[,c(2,5), drop=FALSE], u=theta[,c(3,6), drop=FALSE], delta=theta[,7, drop=TRUE], s=family$s, distr=family$distr, deriv_order=2, tri=family$tri_mat, logp = TRUE)
+    l0<-dcomper_mv_cpp(x=y, m=theta[,c(1,4), drop=FALSE], v=theta[,c(2,5), drop=FALSE], u=theta[,c(3,6), drop=FALSE], delta=theta[,7, drop=TRUE], s=family$s, distr=family$distr, rot=family$rot, deriv_order=2, tri=family$tri_mat, logp = TRUE)
     
     #Assign sum of individual loglikehood contributions to l
     l<-sum(l0)
@@ -299,18 +298,17 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
       x2 <- x[ , jj[[2]], drop=FALSE]
       x3 <- x[ , jj[[3]], drop=FALSE]
       
-      m1<-mgcv::gam(formula=list(y1~x1-1, ~x2-1, ~x3-1),
-                    family=comper(s=family$s[1], distr=family$distr[1]), optimizer = c("efs"))
+      m1<-try(mgcv::gam(formula=list(y1 ~ x1 - 1, ~x2 - 1, ~x3 - 1),
+                        family=comper(s=family$s[1], distr=family$distr[1]), optimizer = c("efs")), silent = TRUE)
       
-      # 
-      # if (any(class(m1) == "try-error")) {
-      #   m1<-try(mgcv::gam(formula=list(family$formula[[1]], family$formula[[2]], family$formula[[3]]),
-      #                     data=family$data, family=comper(s=family$s[1], distr=family$distr[1]), optimizer = c("outer","newton")), silent = TRUE)
-      # }
-      # 
-      # if (any(class(m1) == "try-error")) {
-      #   stop(paste("Algorithm to fit starting values for marginal 1 did not converge", "\n", ""))
-      # }
+      if (any(class(m1) == "try-error")) {
+        m1<-try(mgcv::gam(formula=list(y1 ~ x1 - 1, ~x2 - 1, ~x3 - 1),
+                          family=comper(s=family$s[1], distr=family$distr[1]), optimizer = c("outer","newton")), silent = TRUE)
+      }
+
+      if (any(class(m1) == "try-error")) {
+        stop(paste("Algorithm to fit starting values for marginal 1 did not converge", "\n", ""))
+      }
       
       #Margin 2
       y2 <- y[,2]
@@ -318,39 +316,40 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
       x5 <- x[ , jj[[5]], drop=FALSE]
       x6 <- x[ , jj[[6]], drop=FALSE]
       
-      m2<-mgcv::gam(formula=list(y2~x4-1, ~x5-1, ~x6-1),
-                    family=comper(s=family$s[2], distr=family$distr[2]), optimizer = c("efs"))
+      m2<-try(mgcv::gam(formula=list(y2 ~ x4 - 1, ~x5 - 1, ~x6 - 1),
+                        family=comper(s=family$s[2], distr=family$distr[2]), optimizer = c("efs")), silent = TRUE)
       
-      # if (any(class(m2) == "try-error")) {
-      #   m2<-try(mgcv::gam(formula=list(family$formula[[4]], family$formula[[5]], family$formula[[6]]),
-      #                     data=family$data, family=comper(s=family$s[2], distr=family$distr[2]), optimizer = c("outer","newton")), silent = TRUE)
-      # }
-      # 
-      # if (any(class(m2) == "try-error")) {
-      #   stop(paste("Algorithm to fit starting values for marginal 2 did not converge", "\n", ""))
-      # }
+      if (any(class(m2) == "try-error")) {
+        m2<-try(mgcv::gam(formula=list(y2 ~ x4 - 1, ~x5 - 1, ~x6 - 1),
+                        family=comper(s=family$s[2], distr=family$distr[2]), optimizer = c("outer","newton")), silent = TRUE)
+      }
+
+      if (any(class(m2) == "try-error")) {
+        stop(paste("Algorithm to fit starting values for marginal 2 did not converge", "\n", ""))
+      }
       
       #Probability integral transform
       F1<-pcomper(q=m1$y, mu=m1$fitted.values[,1], sigma_v=m1$fitted.values[,2], sigma_u=m1$fitted.values[,3], s=family$s[1], distr=family$distr[1], log.p=FALSE)
       F2<-pcomper(q=m2$y, mu=m2$fitted.values[,1], sigma_v=m2$fitted.values[,2], sigma_u=m2$fitted.values[,3], s=family$s[2], distr=family$distr[2], log.p=FALSE)
       
-      # family$data$y3<-rep(1,nrow(x))
-      # adj_par_formula<-update.formula(family$formula[[7]], y3 ~ .)
+      #Correct for numerical inaccuracy
+      F1[F1>=1]<-1-1e-16
+      F1[F1<=0]<-0+1e-16
+      
+      F2[F2>=1]<-1-1e-16
+      F2[F2<=0]<-0+1e-16
       
       #Fit copula model with pseudo observations
       x7<-x[,jj[[7]],drop=FALSE]
-      m3<-mgcv::gam(y1 ~ x7-1, family=cop(W=cbind(F1,F2),
-               distr_cop=family$distr[3]), optimizer = c("efs"))
-      # m3<-try(mgcv::gam(list(adj_par_formula), data=family$data, family=cop(W=cbind(F1,F2),
-      #               distr_cop=family$distr[3]), optimizer = c("efs")), silent = TRUE)
-      # if (any(class(m3) == "try-error")) {
-      #   stop(paste("Algorithm to fit starting values for copula did not converge", "\n", ""))
-      # }
+                
+      m3<-try(mgcv::gam(y1 ~ x7-1, family=cop(W=cbind(F1,F2),
+              distr_cop=family$distr[3], rot=family$rot), optimizer = "efs"), silent = TRUE)
       
-      # for(i in 1:6){
-      #   start<-c(start, qr.coef(qr(x[,jj[[i]],drop=FALSE]),cbind(m1$fitted.values,m2$fitted.values)[,i]))
-      # }
-      start<-c(m1$coefficients,m2$coefficients,m3$coefficients)
+      if (any(class(m3) == "try-error")) {
+        stop(paste("Algorithm to fit starting values for copula did not converge", "\n", ""))
+      }
+      
+      start<-c(m1$coefficients, m2$coefficients, m3$coefficients)
     }
   }) 
   
@@ -359,7 +358,7 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
     mu <- as.matrix(mu)
     if(ncol(mu)==1){ mu <- t(mu) }
     
-    return(rcomper_mv(n=nrow(mu), mu = mu[,c(1,4)], sigma_v = mu[,c(2,5)], sigma_u = mu[,c(3,6)], delta = mu[,7], s=attr(mu,"s"), distr=attr(mu,"distr")))
+    return(rcomper_mv(n=nrow(mu), mu = mu[,c(1,4)], sigma_v = mu[,c(2,5)], sigma_u = mu[,c(3,6)], delta = mu[,7], s=attr(mu,"s"), distr=attr(mu,"distr"), rot=attr(mu,"rot")))
   }
   
   cdf <- function(q, mu, wt, scale) {
@@ -367,7 +366,7 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
     mu <- as.matrix(mu)
     if(ncol(mu)==1){ mu <- t(mu) }
     
-    return(pcomper_mv(q=q, mu = mu[,c(1,4)], sigma_v = mu[,c(2,5)], sigma_u = mu[,c(3,6)], delta = mu[,7], s=attr(mu,"s"), distr=attr(mu,"distr")))
+    return(pcomper_mv(q=q, mu = mu[,c(1,4)], sigma_v = mu[,c(2,5)], sigma_u = mu[,c(3,6)], delta = mu[,7], s=attr(mu,"s"), distr=attr(mu,"distr"), rot=attr(mu,"rot")))
   }
   
   predict <- function(family, se=FALSE, eta=NULL,y=NULL,X=NULL,beta=NULL,off=NULL,Vb=NULL) {
@@ -426,11 +425,11 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
     mom2<-par2mom(mu = theta[,4], sigma_v = theta[,5], sigma_u = theta[,6], s=family$s[2], distr=family$distr[2])
     
     #Assign mean
-    fv <- list(cbind(mom1[,1],mom2[,2]))
+    fv <- list(cbind(mom1[,1],mom2[,1]))
     if (!se) return(fv) else {
       stop("se not still available for this family")
       #Assign mean and standard deviation
-      fv <- list(fit=cbind(mom1[,1],mom2[,2]), se.fit=cbind(mom1[,2],mom2[,2]))
+      fv <- list(fit=cbind(mom1[,1], mom2[,1]), se.fit=cbind(mom1[,2], mom2[,2]))
       return(fv)
     }
   }
@@ -448,6 +447,8 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
     
     attr(object$fitted.values,"s")<-object$family$s
     attr(object$fitted.values,"distr")<-object$family$distr
+    attr(object$fitted.values,"rot")<-object$family$rot
+    
     object$fitted.values
   })
   
@@ -457,7 +458,8 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
                  initialize = initialize, #initial parameters
                  s = s, #production or cost function
                  distr = distr, #specifiying distribution
-                 residuals=residuals, #residual function
+                 rot = rot, #rotation
+                 residuals = residuals, #residual function
                  rd=rd, #random number generation
                  cdf=cdf, #cdf function
                  predict=predict, #prediction function for mgcv

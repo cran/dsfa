@@ -3,6 +3,14 @@
 *** denotes really big changes 
 inp "x" -> inp "y" denotes that input argument x has changed to input argument y
 
+
+## version 2.0.1
+* Added rotations 90, 180 and 270 for archimedian copulas and check parameter bounds of delta for dcop, pcop and rcop
+
+* reworked elasticity() output to make it more consistent with efficiency()
+
+* Added cost function example for dsfa and comper
+
 ## version 2.0.0
 *** Major overhaul of the package.
 

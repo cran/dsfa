@@ -11,9 +11,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// dcop_cpp
-Rcpp::NumericMatrix dcop_cpp(arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr_cop, int deriv_order, List tri, bool logp);
-RcppExport SEXP _dsfa_dcop_cpp(SEXP uSEXP, SEXP vSEXP, SEXP pSEXP, SEXP distr_copSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
+// dcop_unrot_cpp
+Rcpp::NumericMatrix dcop_unrot_cpp(arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr_cop, int deriv_order, List tri, bool logp);
+RcppExport SEXP _dsfa_dcop_unrot_cpp(SEXP uSEXP, SEXP vSEXP, SEXP pSEXP, SEXP distr_copSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -24,7 +24,25 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type deriv_order(deriv_orderSEXP);
     Rcpp::traits::input_parameter< List >::type tri(triSEXP);
     Rcpp::traits::input_parameter< bool >::type logp(logpSEXP);
-    rcpp_result_gen = Rcpp::wrap(dcop_cpp(u, v, p, distr_cop, deriv_order, tri, logp));
+    rcpp_result_gen = Rcpp::wrap(dcop_unrot_cpp(u, v, p, distr_cop, deriv_order, tri, logp));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dcop_cpp
+Rcpp::NumericMatrix dcop_cpp(arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr_cop, int rot, int deriv_order, List tri, bool logp);
+RcppExport SEXP _dsfa_dcop_cpp(SEXP uSEXP, SEXP vSEXP, SEXP pSEXP, SEXP distr_copSEXP, SEXP rotSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type v(vSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type distr_cop(distr_copSEXP);
+    Rcpp::traits::input_parameter< int >::type rot(rotSEXP);
+    Rcpp::traits::input_parameter< int >::type deriv_order(deriv_orderSEXP);
+    Rcpp::traits::input_parameter< List >::type tri(triSEXP);
+    Rcpp::traits::input_parameter< bool >::type logp(logpSEXP);
+    rcpp_result_gen = Rcpp::wrap(dcop_cpp(u, v, p, distr_cop, rot, deriv_order, tri, logp));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -274,8 +292,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // dcomper_mv_cpp
-NumericMatrix dcomper_mv_cpp(arma::mat x, arma::mat m, arma::mat v, arma::mat u, arma::vec delta, arma::vec s, Rcpp::StringVector distr, int deriv_order, List tri, bool logp);
-RcppExport SEXP _dsfa_dcomper_mv_cpp(SEXP xSEXP, SEXP mSEXP, SEXP vSEXP, SEXP uSEXP, SEXP deltaSEXP, SEXP sSEXP, SEXP distrSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
+NumericMatrix dcomper_mv_cpp(arma::mat x, arma::mat m, arma::mat v, arma::mat u, arma::vec delta, arma::vec s, Rcpp::StringVector distr, int rot, int deriv_order, List tri, bool logp);
+RcppExport SEXP _dsfa_dcomper_mv_cpp(SEXP xSEXP, SEXP mSEXP, SEXP vSEXP, SEXP uSEXP, SEXP deltaSEXP, SEXP sSEXP, SEXP distrSEXP, SEXP rotSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -286,10 +304,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type delta(deltaSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type s(sSEXP);
     Rcpp::traits::input_parameter< Rcpp::StringVector >::type distr(distrSEXP);
+    Rcpp::traits::input_parameter< int >::type rot(rotSEXP);
     Rcpp::traits::input_parameter< int >::type deriv_order(deriv_orderSEXP);
     Rcpp::traits::input_parameter< List >::type tri(triSEXP);
     Rcpp::traits::input_parameter< bool >::type logp(logpSEXP);
-    rcpp_result_gen = Rcpp::wrap(dcomper_mv_cpp(x, m, v, u, delta, s, distr, deriv_order, tri, logp));
+    rcpp_result_gen = Rcpp::wrap(dcomper_mv_cpp(x, m, v, u, delta, s, distr, rot, deriv_order, tri, logp));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -412,7 +431,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_dsfa_dcop_cpp", (DL_FUNC) &_dsfa_dcop_cpp, 7},
+    {"_dsfa_dcop_unrot_cpp", (DL_FUNC) &_dsfa_dcop_unrot_cpp, 7},
+    {"_dsfa_dcop_cpp", (DL_FUNC) &_dsfa_dcop_cpp, 8},
     {"_dsfa_chainrule_bi", (DL_FUNC) &_dsfa_chainrule_bi, 4},
     {"_dsfa_chainrule", (DL_FUNC) &_dsfa_chainrule, 3},
     {"_dsfa_sumrule_bi", (DL_FUNC) &_dsfa_sumrule_bi, 4},
@@ -429,7 +449,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_dsfa_pnormexp_cpp", (DL_FUNC) &_dsfa_pnormexp_cpp, 8},
     {"_dsfa_dcomper_cpp", (DL_FUNC) &_dsfa_dcomper_cpp, 9},
     {"_dsfa_pcomper_cpp", (DL_FUNC) &_dsfa_pcomper_cpp, 9},
-    {"_dsfa_dcomper_mv_cpp", (DL_FUNC) &_dsfa_dcomper_mv_cpp, 10},
+    {"_dsfa_dcomper_mv_cpp", (DL_FUNC) &_dsfa_dcomper_mv_cpp, 11},
     {"_dsfa_ind2joint_bi", (DL_FUNC) &_dsfa_ind2joint_bi, 6},
     {"_dsfa_ind2joint", (DL_FUNC) &_dsfa_ind2joint, 4},
     {"_dsfa_transform", (DL_FUNC) &_dsfa_transform, 4},

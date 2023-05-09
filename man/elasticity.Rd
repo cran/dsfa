@@ -7,7 +7,7 @@
 elasticity(object, select = NULL, plot = TRUE, se = TRUE)
 }
 \arguments{
-\item{object}{fitted mgcv object with family \code{normhnorm()}, \code{normexp()} or \code{comperr_mv()}.}
+\item{object}{fitted mgcv object with family \code{comper()} or \code{comper_mv()}.}
 
 \item{select}{specifying the smooth function for which the elasticity is calculated. If \code{term=NULL} the elasticities for all smooths of \eqn{\mu} are returned (excluding random and spatial effects).}
 
