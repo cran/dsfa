@@ -1,4 +1,4 @@
-#' dsfa: Distributional Stochastic Frontier Analysis
+#' dsfa-package: Distributional Stochastic Frontier Analysis
 #'
 #' @docType package
 #' @name dsfa
@@ -10,7 +10,7 @@
 #' @useDynLib dsfa
 #' 
 #' @description
-#' The \code{dsfa} package implements the specification, estimation and prediction of distributional stochastic frontier models via \code{mgcv}.
+#' The \pkg{dsfa} package implements the specification, estimation and prediction of distributional stochastic frontier models via \pkg{mgcv}.
 #' The basic distributional stochastic frontier model is given by: \deqn{Y_n = \eta^\mu(\boldsymbol{x}_n^\mu) + V_n + s \cdot U_n } where \eqn{n \in \{1,2,...,N\}}.
 #' \eqn{V_n} and \eqn{U_n} are the noise and (in)efficiency respectively.
 #' \itemize{
@@ -24,54 +24,55 @@
 #' \item If \eqn{U_n \sim HN(\sigma_{Un}^2)}, where \eqn{\sigma_{Un}=\exp(\eta^{\sigma_{Un}}(\boldsymbol{x}_n^{\sigma_{U}}))}.
 #'   Here, \eqn{\boldsymbol{x}_n^{\sigma_{U}}} are the observed covariates which influence the parameter of the (in)efficiency.
 #'   Consequently: \deqn{Y_n \sim normhnorm(\mu_n=\eta^\mu(\boldsymbol{x}_n^\mu), \sigma_{Vn}=\exp(\eta^{\sigma_{V}}(\boldsymbol{x}_n^{\sigma_{V}})), \sigma_{Un}=\exp(\eta^{\sigma_{U}}(\boldsymbol{x}_n^{\sigma_{U}})), s=s)}.
-#'   For more details see [dnormhnorm()].
+#'   For more details see \code{\link{dnormhnorm}}.
 #' \item If \eqn{U_n \sim Exp(\sigma_{Un})}, where \eqn{\sigma_{Un}=\exp(\eta^{\sigma_{Un}}(\boldsymbol{x}_n^{\sigma_{U}}))}.
 #'  Here, \eqn{\boldsymbol{x}_n^{\sigma_{U}}} are the observed covariates which influence the parameter of the (in)efficiency.
 #'  Consequently: \deqn{Y_n \sim normexp(\mu_n=\eta^\mu(\boldsymbol{x}_n^\mu), \sigma_{Vn}=\exp(\eta^{\sigma_{V}}(\boldsymbol{x}_n^{\sigma_{V}})), \sigma_{Un}=\exp(\eta^{\sigma_{U}}(\boldsymbol{x}_n^{\sigma_{U}})), s=s)}.
-#'  For more details see [dnormexp()].
+#'  For more details see \code{\link{dnormexp}}.
 #' }
 #' }
-#' Consequently, \eqn{Y_n} follows a composed-error distribution. For an overview see [dcomper()]. 
+#' Consequently, \eqn{Y_n} follows a composed-error distribution. For an overview see \code{\link{dcomper}}. 
 #' 
 #' Let \eqn{\theta_n} be a parameter of the distribution of \eqn{Y_n}, e.g. \eqn{\theta_n \in \{\mu_n, \sigma_{Un}, \sigma_{Vn}\}}.
 #' Further, let \eqn{g^{-1}_{\theta}(\cdot)} be the monotonic response function, which links the additive predictor \eqn{\eta(\boldsymbol{x}_n^\theta)} to the parameter space for the parameter \eqn{\theta_n} via the additive model:
 #' \deqn{g^{-1}_{\theta}(\theta_n)=\eta(\boldsymbol{x}_n^\theta)=\beta^\theta_0 + \sum_{j^\theta=1}^{J^\theta} h^\theta_{j^\theta}(x^\theta_{nj^\theta})}
 #' Thus, the additive predictor \eqn{\eta(\boldsymbol{x}_n^\theta)} is made up by the intercept \eqn{\beta^\theta_0} and \eqn{J^\theta} smooths terms.
-#' The \code{mgcv} packages provides a framework for fitting distributional regression models. For more information see [comper()].
-#' The additive predictors can be defined via formulae in \code{\link[mgcv:gam]{gam()}}. Within the formulae for the parameter \eqn{\theta_n}, the smooth function for the variable \eqn{x^\theta_{nj^\theta}} can be specified via the function \code{\link[mgcv:s]{s()}}, which is \eqn{h^\theta_{j^\theta}(\cdot)} in the notation above.
+#' The \pkg{mgcv} packages provides a framework for fitting distributional regression models. For more information see \code{\link{comper}}.
+#' The additive predictors can be defined via formulae in \code{\link[mgcv:gam]{gam}}. Within the formulae for the parameter \eqn{\theta_n}, the smooth function for the variable \eqn{x^\theta_{nj^\theta}} can be specified via the function \code{\link[mgcv:s]{s}}, which is \eqn{h^\theta_{j^\theta}(\cdot)} in the notation above.
 #' The smooth functions may be:
 #' \itemize{
 #' \item linear effects, may include polynomials or regression splines.
-#' \item non-linear effects, which can be modeled via penalized regression splines, e.g. \code{\link[mgcv:p.spline]{p.spline()}}, \code{\link[mgcv:tprs]{tprs()}}.
-#' \item random effects, \code{\link[mgcv:random.effects]{random.effects()}}.
-#' \item spatial effects, which can be modeled via \code{\link[mgcv:mrf]{mrf()}}.
+#' \item non-linear effects, which can be modeled via penalized regression splines, e.g. \code{\link[mgcv:p.spline]{p.spline}}, \code{\link[mgcv:tprs]{tprs}}.
+#' \item random effects, \code{\link[mgcv:random.effects]{random.effects}}.
+#' \item spatial effects, which can be modeled via \code{\link[mgcv:mrf]{mrf}}.
 #' }
-#' An overview is provided at \code{\link[mgcv:smooth.terms]{smooth.terms()}}.
-#' The functions \code{\link[mgcv:gam]{gam()}}, \code{\link[mgcv:predict.gam]{predict.gam()}} and \code{\link[mgcv:plot.gam]{plot.gam()}},
+#' An overview is provided at \code{\link[mgcv:smooth.terms]{smooth.terms}}.
+#' The functions \code{\link[mgcv:gam]{gam}}, \code{\link[mgcv:predict.gam]{predict.gam}} and \code{\link[mgcv:plot.gam]{plot.gam}},
 #' are alike to the basic \code{S} functions.
-#' A number of other functions such as \code{\link[mgcv:summary.gam]{summary.gam()}}, \code{\link[mgcv:residuals.gam]{residuals.gam}} and
+#' A number of other functions such as \code{\link[mgcv:summary.gam]{summary.gam}}, \code{\link[mgcv:residuals.gam]{residuals.gam}} and
 #' \code{\link[mgcv:anova.gam]{anova.gam}} are also provided, for extracting information from a fitted \code{\link[mgcv:gamObject]{gamOject}}.
 #'
 #' The main functions are:
 #' \itemize{
-#' \item [comper()]  Object which can be used to fit a composed-error stochastic frontier model with the \code{mgcv} package.
-#' \item [comper_mv()]  Object which can be used to fit a multivariate composed-error stochastic frontier model with the \code{mgcv} package.
-#' \item [elasticity()]  Calculates and plots the elasticity of a smooth function.
-#' \item [efficiency()]  Calculates the expected technical (in)efficiency index \eqn{E[u|\epsilon]} or \eqn{E[\exp(-u)|\epsilon]}.
+#' \item \code{\link{comper}}  Object which can be used to fit a composed-error stochastic frontier model with the \code{mgcv} package.
+#' \item \code{\link{comper_mv}}  Object which can be used to fit a multivariate composed-error stochastic frontier model with the \code{mgcv} package.
+#' \item \code{\link{elasticity}}  Calculates and plots the elasticity of a smooth function.
+#' \item \code{\link{efficiency}}  Calculates the expected technical (in)efficiency index \eqn{E[U|\mathcal{E}]} or \eqn{E[\exp(-U)|\mathcal{E}]}.
 #' }
 #'
 #' Further useful functions are:
 #' \itemize{
-#' \item [dcomper()] Probablitiy density function, distribution, quantile function and random number generation for the composed-error distribution.
-#' \item [dcomper_mv()] Probablitiy density function, distribution, quantile function and random number generation for the multivariate composed-error distribution.
-#' \item [dcop()]  Probablitiy density function, distribution and random number generation for copulas.
+#' \item \code{\link{dcomper}} Probablitiy density function, distribution, quantile function and random number generation for the composed-error distribution.
+#' \item \code{\link{dcomper_mv}} Probablitiy density function, distribution, quantile function and random number generation for the multivariate composed-error distribution.
+#' \item \code{\link{dcop}}  Probablitiy density function, distribution and random number generation for copulas.
 #' }
 #' These are written in \code{C++} for fast and accurate evaluation including derivatives. They may be helpful for other researchers, who want to avoid the tedious implementation.
 #' Additionally:
 #' \itemize{
-#' \item [cop()]  Object which can be used to fit a copula with the \code{mgcv} package.
+#' \item \code{\link{cop}}  Object which can be used to fit a copula with the \pkg{mgcv} package.
 #' }
 #' @examples
+#' \donttest{
 #' ### First example with simulated data
 #' #Set seed, sample size and type of function
 #' set.seed(1337)
@@ -97,7 +98,7 @@
 #' sigma_u_formula<-~1+s(x5, bs="ps")
 #' 
 #' #Fit model
-#' model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#' model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #'                  data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
 #' 
 #' #Model summary
@@ -115,7 +116,7 @@
 #'         mean(-1+sin(2*pi*x5)),col=2) #True effect
 #' 
 #' ### Second example with real data of production function
-#' \donttest{
+#' 
 #' data("RiceFarms", package = "plm") #load data
 #' RiceFarms[,c("goutput","size","seed", "totlabor", "urea")]<-
 #'   log(RiceFarms[,c("goutput","size","seed", "totlabor", "urea")]) #log outputs and inputs
@@ -133,18 +134,17 @@
 #' sigma_u_formula<-~bimas
 #' 
 #' #Fit model with normhnorm dstribution
-#' model_normhnorm<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#' model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #' data=RiceFarms, family=comper(s=s, distr="normhnorm"), optimizer = "efs")
 #' 
 #' #Summary of model
-#' summary(model_normhnorm)
+#' summary(model)
 #' 
 #' #Plot smooths
-#' plot(model_normhnorm)
-#' }
+#' plot(model)
 #' 
 #' ### Third example with real data of cost function
-#' \donttest{
+#' 
 #' data("electricity", package = "sfaR") #load data
 #' 
 #' #Log inputs and outputs as in Greene 1990 eq. 46
@@ -162,19 +162,19 @@
 #' sigma_u_formula<-~s(lo, bs="ps") + s(lshare, bs="ps") + s(cshare, bs="ps")
 #' 
 #' #Fit model with normhnorm dstribution
-#' model_normhnorm<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#' model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #'                            data=electricity, family=comper(s=s, distr="normhnorm"),
 #'                            optimizer = "efs")
 #' 
 #' #Summary of model
-#' summary(model_normhnorm)
+#' summary(model)
 #' 
 #' #Plot smooths
-#' plot(model_normhnorm)
+#' plot(model)
 #' }
 #' @references
 #' \itemize{
-#' \item \insertRef{schmidt2022mvdsfm}{dsfa}
+#' \item \insertRef{schmidt2023multivariate}{dsfa}
 #' \item \insertRef{wood2017generalized}{dsfa}
 #' \item \insertRef{kumbhakar2015practitioner}{dsfa}
 #' \item \insertRef{schmidt2020analytic}{dsfa}

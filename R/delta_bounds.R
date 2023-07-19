@@ -2,10 +2,10 @@
 #' 
 #' Provides the minimum and maximum of the parameter space for \eqn{\delta}
 #'  
-#' @return Returns numeric vector of length two with first argument being the min and the second argument being the max of the parameter space.
+#' @return Returns numeric vector of length two with first argument being the minimum and the second argument being the maximum of the parameter space.
 #' 
 #' @details Although the parameter space is larger in theory for some copulas, numeric under- and overflow limits the parameter space. The parameter space of \eqn{\delta} is specified for each copula below: 
-#' \enumerate{
+#' \itemize{
 #' \item  `independent`, min=0 and max=1
 #' \item  `normal`, min=-1 and max=1
 #' \item  `clayton`, min=1e-16 and max=28
@@ -24,39 +24,39 @@
 #' @family copula
 #' 
 #' @export
-delta_bounds<-function(distr_cop){
+delta_bounds<-function(distr){
   #Delta parameter space boundaries
-  if(distr_cop=="independent"){
+  if(distr=="independent"){
     min<-0
     max<-1
   }
   
-  if(distr_cop=="normal"){
+  if(distr=="normal"){
     min<--1
     max<-1
   }
   
-  if(distr_cop=="clayton"){
+  if(distr=="clayton"){
     min<-0
     max<-28
   }
   
-  if(distr_cop=="gumbel"){
+  if(distr=="gumbel"){
     min<-1
     max<-17
   }
   
-  if(distr_cop=="frank"){
+  if(distr=="frank"){
     min<--35
     max<-35
   }
   
-  if(distr_cop=="joe"){
+  if(distr=="joe"){
     min<-1
     max<-30
   }
   
-  if(distr_cop=="amh"){
+  if(distr=="amh"){
     min<--1
     max<-1
   }

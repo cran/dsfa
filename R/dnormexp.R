@@ -3,12 +3,12 @@
 #' Probablitiy density function, distribution, quantile function and random number generation for the normal-exponential distribution
 #'
 #' @return \code{dnormexp()} gives the density, \code{pnormexp()} give the distribution function, \code{qnormexp()} gives the quantile function, and \code{rnormexp()} generates random numbers, with given parameters.
-#' \code{dnormexp()} and \code{pnormexp()} return a \code{derivs} object. For more details see [trind()] and [trind_generator()].
+#' \code{dnormexp()} and \code{pnormexp()} return a \code{derivs} object. For more details see \code{\link{trind}} and \code{\link{trind_generator}}.
 #'
-#' @details A random variable \eqn{X} follows a normal-exponential distribution if \eqn{X = V + s \cdot U }, where \eqn{V \sim N(\mu, \sigma_V^2)} and \eqn{U \sim Exp(\sigma_u)}.
+#' @details A random variable \eqn{X} follows a normal-exponential distribution if \eqn{X = V + s \cdot U }, where \eqn{V \sim N(\mu, \sigma_V^2)} and \eqn{U \sim Exp(\sigma_U)}.
 #' The density is given by \deqn{f_X(x)=\frac{\sigma_U}{2} \exp \{\sigma_U (s \mu) + \frac{1}{2} \sigma_U^2 \sigma_V^2-\sigma_U (s x) \} 2 \Phi(\frac{1}{\sigma_V} (-s \mu)-\sigma_U \sigma_V+\frac{1}{\sigma_V}(s x)) \qquad,}
 #' where \eqn{s=-1} for production and \eqn{s=1} for cost function. In the latter case the distribution is equivalent to the Exponentially modified Gaussian distribution. 
-#'
+#''
 #' @aliases normexp
 #'
 #' @inheritParams dcomper

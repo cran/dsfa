@@ -3,7 +3,7 @@
 #' Probablitiy density function, distribution, quantile function and random number generation for the normal-halfnormal distribution
 #'
 #' @return \code{dnormhnorm()} gives the density, \code{pnormhnorm()} give the distribution function, \code{qnormhnorm()} gives the quantile function, and \code{rnormhnorm()} generates random numbers, with given parameters.
-#' \code{dnormhnorm()} and \code{pnormhnorm()} return a \code{derivs} object. For more details see [trind()] and [trind_generator()].
+#' \code{dnormhnorm()} and \code{pnormhnorm()} return a \code{derivs} object. For more details see \code{\link{trind}} and \code{\link{trind_generator}}.
 #'
 #' @details A random variable \eqn{X} follows a normal-halfnormal distribution if \eqn{X = V + s \cdot U }, where \eqn{V \sim N(\mu, \sigma_V^2)} and \eqn{U \sim HN(\sigma_U^2)}.
 #' The density is given by \deqn{f_X(x)=\frac{1}{\sqrt{\sigma_V^2+\sigma_U^2}} \phi(\frac{x-\mu}{\sqrt{\sigma_V^2+\sigma_U^2}}) \Phi(s \frac{\sigma_U}{\sigma_V} \frac{x-\mu}{\sqrt{\sigma_V^2+\sigma_U^2}}) \qquad,}

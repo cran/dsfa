@@ -12,6 +12,7 @@
 #' @details Calculates the marginal product for parametric terms. For smooth terms the average of the derivative is calculated.
 #'
 #' @examples
+#' \donttest{
 #' #Set seed, sample size and type of function
 #' set.seed(1337)
 #' N=500 #Sample size
@@ -35,15 +36,15 @@
 #' sigma_u_formula<-~1+s(x5, bs="ps")
 #'
 #' #Fit model
-#' model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#' model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #'                  data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
 #'
 #' #Get elasticities
-#' elasticity(model)
-#' 
+#' elasticity(model, plot=TRUE)
+#' }
 #' @references
 #' \itemize{
-#' \item \insertRef{schmidt2022mvdsfm}{dsfa}
+#' \item \insertRef{schmidt2023multivariate}{dsfa}
 #' \item \insertRef{kumbhakar2015practitioner}{dsfa}
 #' \item \insertRef{aigner1977formulation}{dsfa}
 #' \item \insertRef{meeusen1977efficiency}{dsfa}
@@ -70,16 +71,27 @@ elasticity<-function(object, select=NULL, plot=TRUE, se=TRUE){
     }
   } 
   
-  out<-c()
+  if(!se){
+    out<-matrix(rep(NA,1*length(select)), ncol=1)
+    colnames(out)<-c("elasticity")
+  } else {
+    out<-matrix(rep(NA,3*length(select)), ncol=3)
+    colnames(out)<-c("elasticity","CI_lower","CI_upper")
+  }
+  rownames(out)<-select
+  
   for(i in select){
     if(i!=select[1]){
-      invisible(readline(prompt="Hit <Return> to see next plot"))
+      if(plot){
+        invisible(readline(prompt="Hit <Return> to see next plot"))
+      }
     }
+    
     ela<-gratia::derivatives(object, type = "central", term = i)
     term<-object$smooth[[i]]$term
     
     if(plot){
-      plot(ela$data, ela$derivative, type="l", xlab=term, ylab=paste0("h'(",term,")"), main=paste0("Elasticity of ",term, " with average=",round(mean(ela$derivative),4)))
+      plot(ela$data, ela$derivative, type="l", xlab=term, ylab=paste0("h'(",term,")"), main=paste0("Elasticity of ",term, " with average = ", round(mean(ela$derivative),4)))
       
       if(se){
         graphics::lines(ela$data,ela$derivative-ela$se, lty=2)
@@ -87,8 +99,8 @@ elasticity<-function(object, select=NULL, plot=TRUE, se=TRUE){
       }
       
     } else {
-      out<-c(out, mean(ela$derivative))
-      names(out)[which(i%in%select)]<-term
+      out[which(select%in%i),]<-c(mean(ela$derivative),mean(ela$lower),mean(ela$upper))
+      rownames(out)[which(select%in%i)]<-term
     }
   }
 

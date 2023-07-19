@@ -9,7 +9,7 @@ quotientrule(f_list, tri, deriv_order)
 \arguments{
 \item{f_list}{list of \code{derivs} objects of length \eqn{M}, e.g. \eqn{list(f_1(\cdot), f_2(\cdot),...,f_M(\cdot))}}
 
-\item{tri}{list; created by the function \code{\link[=trind_generator]{trind_generator()}}.}
+\item{tri}{list; created by the function [trind_generator()].}
 
 \item{deriv_order}{integer; maximum order of derivative. Available are \code{0},\code{2} and \code{4}.}
 }
@@ -20,10 +20,10 @@ Returns an object of class \code{derivs} for the function \eqn{h(\cdot)}.
 Quotientrule for derivs objects.
 }
 \details{
-Let \eqn{f_m} be a function defined in \code{\link[=trind]{trind()}}, where \eqn{m \in {1,...,M}}.
+Let \eqn{f_m} be a function defined in [trind()], where \eqn{m \in {1,...,M}}.
 Define \eqn{h((x_{n1},x_{n2},...,x_{nK})) = f_1(\cdot) / f_2(\cdot) ... / f_M(x_{n1},x_{n2},...,x_{nK}))}.
 In order to get the derivatives of \eqn{h(\cdot)} w.r.t all parameters \eqn{x_{nk}}, the quotientrule is applied.
-For more details see \code{\link[=trind]{trind()}} and \code{\link[=trind_generator]{trind_generator()}}.The values of the \code{derivs} objects must be positive.
+For more details see [trind()] and [trind_generator()].The values of the \code{derivs} objects must be positive.
 Numerically not precise, but included for  reasons of completeness.
 }
 \examples{

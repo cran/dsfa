@@ -4,34 +4,34 @@
 \alias{delta_bounds}
 \title{Bounds of Copula Parameter delta}
 \usage{
-delta_bounds(distr_cop)
+delta_bounds(distr)
 }
 \arguments{
-\item{distr_cop}{string, defines the copula family:\cr
-\code{independent} = Independence copula \cr
-\code{normal} = Gaussian copula \cr
-\code{clayton} = Clayton copula \cr
-\code{gumbel} = Gumbel copula \cr
-\code{frank} = Frank copula \cr
-\code{joe} = Joe copula \cr
-\code{amh} = Ali-Mikhail-Haq copula \cr}
+\item{distr}{string, defines the copula family:\cr
+`independent` = Independence copula \cr
+`normal` = Gaussian copula \cr
+`clayton` = Clayton copula \cr
+`gumbel` = Gumbel copula \cr
+`frank` = Frank copula \cr
+`joe` = Joe copula \cr
+`amh` = Ali-Mikhail-Haq copula \cr}
 }
 \value{
-Returns numeric vector of length two with first argument being the min and the second argument being the max of the parameter space.
+Returns numeric vector of length two with first argument being the minimum and the second argument being the maximum of the parameter space.
 }
 \description{
 Provides the minimum and maximum of the parameter space for \eqn{\delta}
 }
 \details{
-Although the parameter space is larger in theory for some copulas, numeric under- and overflow limits the parameter space. The parameter space of \eqn{\delta} is specified for each copula below:
-\enumerate{
-\item  \code{independent}, min=0 and max=1
-\item  \code{normal}, min=-1 and max=1
-\item  \code{clayton}, min=1e-16 and max=28
-\item  \code{gumbel}, min=1 and max=17
-\item  \code{frank}, min=-35 and max=35
-\item  \code{joe}, min=1e-16 and max=30
-\item  \code{amh}, min=-1 and max=1
+Although the parameter space is larger in theory for some copulas, numeric under- and overflow limits the parameter space. The parameter space of \eqn{\delta} is specified for each copula below: 
+\itemize{
+\item  `independent`, min=0 and max=1
+\item  `normal`, min=-1 and max=1
+\item  `clayton`, min=1e-16 and max=28
+\item  `gumbel`, min=1 and max=17
+\item  `frank`, min=-35 and max=35
+\item  `joe`, min=1e-16 and max=30
+\item  `amh`, min=-1 and max=1
 }
 }
 \examples{

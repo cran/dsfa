@@ -12,37 +12,37 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // dcop_unrot_cpp
-Rcpp::NumericMatrix dcop_unrot_cpp(arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr_cop, int deriv_order, List tri, bool logp);
-RcppExport SEXP _dsfa_dcop_unrot_cpp(SEXP uSEXP, SEXP vSEXP, SEXP pSEXP, SEXP distr_copSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
+Rcpp::NumericMatrix dcop_unrot_cpp(arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr, int deriv_order, List tri, bool logp);
+RcppExport SEXP _dsfa_dcop_unrot_cpp(SEXP uSEXP, SEXP vSEXP, SEXP pSEXP, SEXP distrSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type v(vSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type distr_cop(distr_copSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type distr(distrSEXP);
     Rcpp::traits::input_parameter< int >::type deriv_order(deriv_orderSEXP);
     Rcpp::traits::input_parameter< List >::type tri(triSEXP);
     Rcpp::traits::input_parameter< bool >::type logp(logpSEXP);
-    rcpp_result_gen = Rcpp::wrap(dcop_unrot_cpp(u, v, p, distr_cop, deriv_order, tri, logp));
+    rcpp_result_gen = Rcpp::wrap(dcop_unrot_cpp(u, v, p, distr, deriv_order, tri, logp));
     return rcpp_result_gen;
 END_RCPP
 }
 // dcop_cpp
-Rcpp::NumericMatrix dcop_cpp(arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr_cop, int rot, int deriv_order, List tri, bool logp);
-RcppExport SEXP _dsfa_dcop_cpp(SEXP uSEXP, SEXP vSEXP, SEXP pSEXP, SEXP distr_copSEXP, SEXP rotSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
+Rcpp::NumericMatrix dcop_cpp(arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr, int rot, int deriv_order, List tri, bool logp);
+RcppExport SEXP _dsfa_dcop_cpp(SEXP uSEXP, SEXP vSEXP, SEXP pSEXP, SEXP distrSEXP, SEXP rotSEXP, SEXP deriv_orderSEXP, SEXP triSEXP, SEXP logpSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type v(vSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type p(pSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type distr_cop(distr_copSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type distr(distrSEXP);
     Rcpp::traits::input_parameter< int >::type rot(rotSEXP);
     Rcpp::traits::input_parameter< int >::type deriv_order(deriv_orderSEXP);
     Rcpp::traits::input_parameter< List >::type tri(triSEXP);
     Rcpp::traits::input_parameter< bool >::type logp(logpSEXP);
-    rcpp_result_gen = Rcpp::wrap(dcop_cpp(u, v, p, distr_cop, rot, deriv_order, tri, logp));
+    rcpp_result_gen = Rcpp::wrap(dcop_cpp(u, v, p, distr, rot, deriv_order, tri, logp));
     return rcpp_result_gen;
 END_RCPP
 }

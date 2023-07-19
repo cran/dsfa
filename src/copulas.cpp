@@ -10,7 +10,7 @@ using namespace Rcpp;
 using namespace arma;
 
 // [[Rcpp::export]]
-Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr_cop, int deriv_order, List tri, bool logp){
+Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr, int deriv_order, List tri, bool logp){
   
   // Initialize
   int n = u.size() ;
@@ -24,7 +24,7 @@ Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp
   Rcpp::StringVector distributions_cop = {"independent","normal","clayton","gumbel","frank","joe","amh"} ;
   
   //Independent copula
-  if(distr_cop==distributions_cop(0)){ 
+  if(distr==distributions_cop(0)){ 
     d0 += 0 ;
     if(deriv_order>0){
       d1 += 0 ;
@@ -37,7 +37,7 @@ Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp
   }
   
   //Normal copula
-  if(distr_cop==distributions_cop(1)){ 
+  if(distr==distributions_cop(1)){ 
     d0 += (p%(p%pow(erfcinv(2*u),2) - 2*erfcinv(2*u)%erfcinv(2*v) + p%pow(erfcinv(2*v),2)))/(-1 + pow(p,2)) - log(1 - pow(p,2))/2. ;
     if(deriv_order>0){
       //First derivatives of za wrt x1,v,p
@@ -61,7 +61,7 @@ Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp
   }
   
   //Clayton copula
-  if(distr_cop==distributions_cop(2)){ 
+  if(distr==distributions_cop(2)){ 
     d0 += log(1 + p) - (1 + p)%log(u%v) + (-2 - 1/p)%log(-1 + pow(u,-p) + pow(v,-p)) ;
     if(deriv_order>0){
       //First derivatives of za wrt u,v,p
@@ -85,7 +85,7 @@ Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp
   }
   
   //Gumbel copula
-  if(distr_cop==distributions_cop(3)){
+  if(distr==distributions_cop(3)){
     arma::vec lu = log(u) ;
     arma::vec lv = log(v) ;
     arma::vec lmlu = log(-lu) ;
@@ -127,7 +127,7 @@ Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp
   }
   
   //Frank copula
-  if(distr_cop==distributions_cop(4)){ 
+  if(distr==distributions_cop(4)){ 
     arma::vec monepu = -1 + u ;
     arma::vec monepv = -1 + v ;
     
@@ -156,7 +156,7 @@ Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp
   }
   
   //Joe copula
-  if(distr_cop==distributions_cop(5)){ 
+  if(distr==distributions_cop(5)){ 
     arma::vec pomup = pow(1 - u,p) ;
     arma::vec pomvp = pow(1 - v,p) ;
     arma::vec monepu = -1 + u ;
@@ -186,7 +186,7 @@ Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp
   }
   
   //AMH copula
-  if(distr_cop==distributions_cop(6)){ 
+  if(distr==distributions_cop(6)){ 
     arma::vec monepu = -1 + u ;
     arma::vec monepv = -1 + v ;
     arma::vec p_2 = pow(p,2) ;
@@ -253,9 +253,11 @@ Rcpp::NumericMatrix  dcop_unrot_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp
 
 
 // [[Rcpp::export]]
-Rcpp::NumericMatrix dcop_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr_cop, int rot, int deriv_order, List tri, bool logp){
+Rcpp::NumericMatrix dcop_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp::String distr, int rot, int deriv_order, List tri, bool logp){
   // Initialize
   int n = u.size() ;
+  u.clamp(0.0000001, 1-0.0000001);
+  v.clamp(0.0000001, 1-0.0000001);
   
   Rcpp::StringVector rotation_vector ; //= {"identity", "identity", "identity"} ;
   
@@ -276,7 +278,7 @@ Rcpp::NumericMatrix dcop_cpp (arma::vec u, arma::vec v, arma::vec p, Rcpp::Strin
   //Initialize output
   NumericMatrix out(n, 1) ;
   Rcpp::List tri_1 = trind_generator(1) ;
-  NumericMatrix cop_unrot = dcop_unrot_cpp (u, v, p, distr_cop, deriv_order, tri, logp) ;
+  NumericMatrix cop_unrot = dcop_unrot_cpp (u, v, p, distr, deriv_order, tri, logp) ;
   if(rot==0){
     out = cop_unrot ;
   } else {

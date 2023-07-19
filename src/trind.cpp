@@ -15,7 +15,7 @@ using namespace arma;
 //' For example \code{c(0,0,1,2)} is equal to \eqn{\frac{\partial^4 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n2} \partial x_{n3}}}.
 //' See details for more information.
 //' 
-//' @details  Let \eqn{f:\mathbb{R}^K \to \mathbb{R}^L, (x_{n1},x_{n2},...,x_{nK}) \mapsto f(x_{n1},x_{n2},...,x_{nK})} be differentiable up to order four w.r.t all parameters \eqn{x_{nk}}, where \eqn{k \in \{1,...,K\}} and \eqn{n \in \{1,...,N\}}.
+//' @details  Let \eqn{f:\mathbb{R}^K -> \mathbb{R}^L, (x_{n1},x_{n2},...,x_{nK}) -> f(x_{n1},x_{n2},...,x_{nK})} be differentiable up to order four w.r.t all parameters \eqn{x_{nk}}, where \eqn{k \in \{1,...,K\}} and \eqn{n \in \{1,...,N\}}.
 //' Then a \code{derivs} class object is a numeric matrix with \eqn{N} rows and \eqn{L} columns. \eqn{N} is the length  of the input vectors. Further, it has the following attributes:
 //' \enumerate{
 //' \item  `d1`: a numeric matrix of the first derivatives w.r.t all parameters,

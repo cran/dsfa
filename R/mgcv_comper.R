@@ -3,19 +3,20 @@
 #' The comper implements the composed-error distribution in which the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} can depend on additive predictors.
 #' Useable with \code{mgcv::gam}, the additive predictors are specified via a list of formulae.
 #'
-#' @return An object inheriting from class \code{general.family} of the mgcv package, which can be used in the 'mgcv' and 'dsfa' package.
+#' @return An object inheriting from class \code{general.family} of the mgcv package, which can be used in the \pkg{mgcv} and \pkg{dsfa} package.
 #'
 #' @details Used with \code{\link[mgcv:gam]{gam()}} to fit distributional stochastic frontier model. The function is called with a list containing three formulae:
 #' \enumerate{
 #'   \item The first formula specifies the response on the left hand side and the structure of the additive predictor for \eqn{\mu} parameter on the right hand side. Link function is "identity".
-#'   \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "log".
-#'   \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_U} on the right hand side. Link function is "log".
+#'   \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_V \}  + b }.
+#'   \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_U} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_U \}  + b }.
 #' }
 #' The fitted values and linear predictors for this family will be three column matrices. The first column is the \eqn{\mu}, the second column is the \eqn{\sigma_V}, the third column is \eqn{\sigma_U}.
 #' For more details of the distribution see \code{dcomper()}.
 #'
 #' @inheritParams dcomper
 #' @param link three item list, specifying the link for the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} parameters. See details.
+#' @param b positive parameter of the logshift link function.
 #' 
 #' @examples
 #' ### First example with simulated data
@@ -43,7 +44,7 @@
 #' sigma_u_formula<-~1+s(x5, bs="ps")
 #' 
 #' #Fit model
-#' model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#' model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #'                  data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
 #' 
 #' #Model summary
@@ -79,14 +80,14 @@
 #' sigma_u_formula<-~bimas
 #' 
 #' #Fit model with normhnorm dstribution
-#' model_normhnorm<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#' model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #' data=RiceFarms, family=comper(s=-1, distr="normhnorm"), optimizer = "efs")
 #' 
 #' #Summary of model
-#' summary(model_normhnorm)
+#' summary(model)
 #' 
 #' #Plot smooths
-#' plot(model_normhnorm)
+#' plot(model)
 #' }
 #' 
 #' ### Third example with real data of cost function
@@ -108,20 +109,20 @@
 #' sigma_u_formula<-~s(lo, bs="ps") + s(lshare, bs="ps") + s(cshare, bs="ps")
 #' 
 #' #Fit model with normhnorm dstribution
-#' model_normhnorm<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#' model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #'                            data=electricity, family=comper(s=s, distr="normhnorm"),
 #'                            optimizer = "efs")
 #' 
 #' #Summary of model
-#' summary(model_normhnorm)
+#' summary(model)
 #' 
 #' #Plot smooths
-#' plot(model_normhnorm)
+#' plot(model)
 #' }
 #' 
 #' @references
 #' \itemize{
-#' \item \insertRef{schmidt2022mvdsfm}{dsfa}
+#' \item \insertRef{schmidt2023multivariate}{dsfa}
 #' \item \insertRef{wood2017generalized}{dsfa}
 #' \item \insertRef{aigner1977formulation}{dsfa}
 #' \item \insertRef{kumbhakar2015practitioner}{dsfa}
@@ -130,7 +131,7 @@
 #' }
 #' @export
 #comper distribution object for mgcv
-comper<- function(link = list("identity", "log", "log"), s = -1, distr="normhnorm"){
+comper<- function(link = list("identity", "logshift", "logshift"), s = -1, distr="normhnorm", b=1e-2){
   #Object for mgcv::gam such that the composed-error distribution can be estimated.
   
   #Number of parameters
@@ -138,35 +139,59 @@ comper<- function(link = list("identity", "log", "log"), s = -1, distr="normhnor
   
   #Link functions
   if (length(link) != npar) stop("comper requires 3 links specified as character strings")
-  okLinks <- list("identity", "log", "log")
+  okLinks <- list("identity", "logshift", "logshift")
   stats <- list()
   param.names <- c("mu", "sigma_v", "sigma_u")
   for (i in 1:npar) { # Links for mu, sigma_v, sigma_u
-    if (link[[i]] %in% okLinks[[i]]) stats[[i]] <- stats::make.link(link[[i]]) else
+    if (link[[i]] %in% okLinks[[i]]) {
+      
+      if(link[[i]]%in%c("identity", "log")){
+        
+          stats[[i]] <- stats::make.link(link[[i]])
+          fam <- structure(list(link=link[[i]],canonical="none",linkfun=stats[[i]]$linkfun,
+                                mu.eta=stats[[i]]$mu.eta),
+                           class="family")
+          fam <- mgcv::fix.family.link(fam)
+          stats[[i]]$d2link <- fam$d2link
+          stats[[i]]$d3link <- fam$d3link
+          stats[[i]]$d4link <- fam$d4link
+      }
+      
+      if(link[[i]]%in%c("logshift")){
+        
+        stats[[i]] <- list()
+        stats[[i]]$valideta <- function(eta) TRUE 
+        stats[[i]]$link = link[[i]]
+        stats[[i]]$linkfun <- eval(parse(text=paste("function(mu) log(mu)  + ",b)))
+        stats[[i]]$linkinv <- eval(parse(text=paste("function(eta) exp(eta - ",b,")")))
+        stats[[i]]$mu.eta <-  eval(parse(text=paste("function(eta) exp(eta - ",b,")")))
+        stats[[i]]$d2link <-  eval(parse(text=paste("function(mu)  -1/mu^2",sep='')))
+        stats[[i]]$d3link <-  eval(parse(text=paste("function(mu)  2/mu^3",sep='')))
+        stats[[i]]$d4link <-  eval(parse(text=paste("function(mu)  -6/mu^4",sep='')))
+      } 
+    } else {
       stop(link[[i]]," link not available for ", param.names[i]," parameter of comper")
-    fam <- structure(list(link=link[[i]],canonical="none",linkfun=stats[[i]]$linkfun,
-                          mu.eta=stats[[i]]$mu.eta),
-                     class="family")
-    fam <- mgcv::fix.family.link(fam)
-    stats[[i]]$d2link <- fam$d2link
-    stats[[i]]$d3link <- fam$d3link
-    stats[[i]]$d4link <- fam$d4link
+    }
   }
   
-  residuals <- function(object, type = c("deviance", "response")) {
+  residuals <- function(object, type = c("deviance", "response", "normalized")) {
     #Calculate residuals
     type <- match.arg(type)
     
-    mom<-par2mom(mu=object$fitted[,1], sigma_v = object$fitted[,2], sigma_u=object$fitted[,3], s=object$family$s, distr=object$family$distr)
-   
-    y_hat<-mom[,1]
-    
-    rsd <- object$y-y_hat
-    
-    if (type=="response"){
-      out<-rsd
-    }  else {
-      out<-rsd/mom[,2]
+    if(type%in%c("deviance", "response")){
+      mom<-par2mom(mu=object$fitted[,1], sigma_v = object$fitted[,2], sigma_u=object$fitted[,3], s=object$family$s, distr=object$family$distr)
+      
+      y_hat<-mom[,1]
+      
+      rsd <- object$y-y_hat
+      
+      if (type=="response"){
+        out<-rsd
+      }  else {
+        out<-rsd/mom[,2]
+      }
+    } else{
+      out<-stats::qnorm(pcomper(q=object$y, mu=object$fitted[,1], sigma_v = object$fitted[,2], sigma_u=object$fitted[,3], s=object$family$s, distr=object$family$distr))
     }
     
     return(out)
@@ -389,7 +414,7 @@ comper<- function(link = list("identity", "log", "log"), s = -1, distr="normhnor
     return(pcomper(q=q, mu = mu[,1], sigma_v = mu[,2], sigma_u = mu[,3], s=attr(mu,"s"), distr=attr(mu,"distr")))
   }
   
-  predict <- function(family, se=FALSE,eta=NULL,y=NULL,X=NULL,beta=NULL,off=NULL,Vb=NULL) {
+  predict <- function(family, se=FALSE, eta=NULL, y=NULL, X=NULL, beta=NULL, off=NULL, Vb=NULL) {
     #Prediction function
     # optional function to give predicted values - idea is that
     # predict.gam(...,type="response") will use this, and that
@@ -398,13 +423,16 @@ comper<- function(link = list("identity", "log", "log"), s = -1, distr="normhnor
     # if se = FALSE returns one item list containing matrix otherwise
     # list of two matrices "fit" and "se.fit"...
     
+    #Number of parameters
+    npar <- 3
+    
     if (is.null(eta)) {
       if (is.null(off)){
         off <- list(0,0,0)
       } 
       off[[4]] <- 0
       
-      for (i in 1:family$npar) {
+      for (i in 1:npar) {
         if (is.null(off[[i]])){
           off[[i]] <- 0
         } 
@@ -414,21 +442,21 @@ comper<- function(link = list("identity", "log", "log"), s = -1, distr="normhnor
       jj <- attr(X,"lpi")
       
       #Calculate additive predictors for mu, sigma_v, sigma_u
-      eta<-matrix(0, nrow(X), family$npar)
-      for(i in 1:family$npar){
+      eta<-matrix(0, nrow(X), npar)
+      for(i in 1:npar){
         eta[,i]<-drop(X[,jj[[i]],drop=FALSE]%*%beta[jj[[i]]] + off[[i]])
       }
       
-      if (se) {
-        stop("se still not available for this family")
-      }
+      # if (se) {
+      #   stop("se still not available for this family")
+      # }
     } else {
       se <- FALSE
     }
     
     #Additive predictors 2 parameters
-    theta<-matrix(0,nrow(X),family$npar)
-    for(i in 1:family$npar){
+    theta<-matrix(0,nrow(X),npar)
+    for(i in 1:npar){
       theta[,i]<-family$linfo[[i]]$linkinv( eta[,i] )
     }
     
@@ -438,7 +466,7 @@ comper<- function(link = list("identity", "log", "log"), s = -1, distr="normhnor
     #Assign mean
     fv <- list(mom[,1])
     if (!se) return(fv) else {
-      stop("se not still available for this family")
+      # stop("se not still available for this family")
       #Assign mean and standard deviation
       fv <- list(fit=mom[,1], se.fit=mom[,2])
       return(fv)
@@ -457,6 +485,7 @@ comper<- function(link = list("identity", "log", "log"), s = -1, distr="normhnor
                  initialize=initialize, #initial parameters
                  s = s, #production or cost function
                  distr = distr, #specifiying distribution
+                 b=b,
                  residuals=residuals, #residual function
                  rd=rd, #random number generation
                  qf=qf, #quantile function

@@ -7,17 +7,17 @@
 \format{
 manuf is a data frame with 6188 rows and 7 columns:
 \describe{
-\item{naics}{NAICS 2012 6-digit industry code}
-\item{year}{Year from 2000 to 2016}
-\item{Y}{Total value of shipments in millions of 2012 dollars}
-\item{K}{Real capital stock in millions of 2012 dollars}
-\item{L}{Production worker hours in millions}
-\item{M}{Total cost of materials  in millions of 2012 dollars}
-\item{I}{New capital spending in millions of 2012 dollars}
+  \item{naics}{NAICS 2012 6-digit industry code}
+  \item{year}{Year from 2000 to 2016}
+  \item{Y}{Total value of shipments in millions of 2012 dollars}
+  \item{K}{Real capital stock in millions of 2012 dollars}
+  \item{L}{Production worker hours in millions}
+  \item{M}{Total cost of materials  in millions of 2012 dollars}
+  \item{I}{New capital spending in millions of 2012 dollars}
 }
 }
 \source{
-\url{https://www.nber.org/research/data/nber-ces-manufacturing-industry-database}
+<https://www.nber.org/research/data/nber-ces-manufacturing-industry-database>
 }
 \usage{
 manuf

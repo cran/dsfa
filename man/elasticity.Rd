@@ -25,6 +25,7 @@ Calculates and plots the elasticity of a smooth function.
 Calculates the marginal product for parametric terms. For smooth terms the average of the derivative is calculated.
 }
 \examples{
+\donttest{
 #Set seed, sample size and type of function
 set.seed(1337)
 N=500 #Sample size
@@ -48,16 +49,16 @@ sigma_v_formula<-~1+x4
 sigma_u_formula<-~1+s(x5, bs="ps")
 
 #Fit model
-model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
                  data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
 
 #Get elasticities
-elasticity(model)
-
+elasticity(model, plot=TRUE)
+}
 }
 \references{
 \itemize{
-\item \insertRef{schmidt2022mvdsfm}{dsfa}
+\item \insertRef{schmidt2023multivariate}{dsfa}
 \item \insertRef{kumbhakar2015practitioner}{dsfa}
 \item \insertRef{aigner1977formulation}{dsfa}
 \item \insertRef{meeusen1977efficiency}{dsfa}

@@ -22,10 +22,10 @@ Returns a derivs object.
 Combines multiple derivs objects into a single derivs object.
 }
 \details{
-Let \eqn{f_m} be a function defined in \code{\link[=trind]{trind()}}, where \eqn{m \in {1,...,M}}.
+Let \eqn{f_m} be a function defined in [trind()], where \eqn{m \in {1,...,M}}.
 Define \eqn{h((x_{n1},x_{n2},...,x_{nK})) = (f_1(x_{n1}), f_2(x_{n2}), ... ,f_M(x_{nK}))}.
 In order to get the derivatives of \eqn{h(\cdot)} w.r.t all parameters \eqn{x_{nk}}, the independent functions are combined.
-For more details see \code{\link[=trind]{trind()}} and \code{\link[=trind_generator]{trind_generator()}}.
+For more details see [trind()] and [trind_generator()].
 }
 \examples{
 A<-matrix(c(1:9)/10, ncol=1)

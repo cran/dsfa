@@ -1,22 +1,26 @@
 #' comper
 #'
-#' The comper implements the composed-error distribution in which the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} can depend on additive predictors.
+#' The comper implements the multivariate composed-error distribution in which the \eqn{\mu_1}, \eqn{\sigma_{V1}}, \eqn{\sigma_{U2}}, \eqn{\mu_2}, \eqn{\sigma_{V2}},  \eqn{\sigma_{U2}} and \eqn{\delta} can depend on additive predictors.
 #' Useable with \code{mgcv::gam}, the additive predictors are specified via a list of formulae.
 #'
-#' @return An object inheriting from class \code{general.family} of the mgcv package, which can be used in the 'mgcv' and 'dsfa' package.
+#' @return An object inheriting from class \code{general.family} of the mgcv package, which can be used in the \pkg{mgcv} and \pkg{dsfa} package.
 #'
 #' @details Used with \code{\link[mgcv:gam]{gam()}} to fit distributional stochastic frontier model. The function is called with a list containing three formulae:
 #' \enumerate{
-#'   \item The first formula specifies the response on the left hand side and the structure of the additive predictor for \eqn{\mu} parameter on the right hand side. Link function is "identity".
-#'   \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "log".
-#'   \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_U} on the right hand side. Link function is "log".
+#'   \item The first formula specifies the response of marginal one on the left hand side and the structure of the additive predictor for \eqn{\mu_1} parameter on the right hand side. Link function is "identity".
+#'   \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_{V1}} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_{V1} \}  + b }.
+#'   \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_{U1}} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_{U1} \}  + b }.
+#'   \item The fourth formula specifies the response of marginal two on the left hand side and the structure of the additive predictor for \eqn{\mu_2} parameter on the right hand side. Link function is "identity".
+#'   \item The fifth formula is one sided, specifying the additive predictor for the  \eqn{\sigma_{V2}} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_{V2} \}  + b }.
+#'   \item The sixth formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_{U2}} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_{U2} \}  + b }.
+#'   \item The seventh formula  is one sided, specifying the additive predictor for the  \eqn{\delta} on the right hand side. Link function is "glogit".
 #' }
-#' The fitted values and linear predictors for this family will be three column matrices. The first column is the \eqn{\mu}, the second column is the \eqn{\sigma_V}, the third column is \eqn{\sigma_U}.
+#' The fitted values and linear predictors for this family will be seven column matrices.
 #' For more details of the distribution see \code{dcomper()}.
 #'
 #' @inheritParams dcomper_mv
-#' @param link three item list, specifying the link for the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} parameters. See details.
-#' 
+#' @param link seven item list, specifying the links for \eqn{\mu_1}, \eqn{\sigma_{V1}}, \eqn{\sigma_{U2}}, \eqn{\mu_2}, \eqn{\sigma_{V2}},  \eqn{\sigma_{U2}} and \eqn{\delta}. See details.
+#' @param b positive parameter of the logshift link function.
 #' @examples
 #' \donttest{
 #' #Set seed, sample size and type of function
@@ -61,7 +65,7 @@
 #' delta_formula<-~s(x7,bs="ps")
 #' 
 #' #Fit model
-#' model<-mgcv::gam(formula=list(mu_1_formula,sigma_v1_formula,sigma_u1_formula,
+#' model<-dsfa(formula=list(mu_1_formula,sigma_v1_formula,sigma_u1_formula,
 #'                               mu_2_formula,sigma_v2_formula,sigma_u2_formula,
 #'                               delta_formula),  data=dat,
 #'                  family=comper_mv(s=s, distr=c(distr_marg1,distr_marg2,distr_cop)),
@@ -98,11 +102,40 @@
 #'
 #' efficiency(model)
 #' elasticity(model)
+#' 
+#' #' ### Second example with real data
+#' 
+#' data(BurkinaFarms)
+#' data(BurkinaFarms_polys)
+#' 
+#' #Write formulae for parameters
+#' mu_1_formula<-qharv_millet~s(land_millet, bs="ps")+s(labour_millet, bs="ps")+
+#'                            s(material, bs="ps")+s(fert_millet, bs="ps")+
+#'                            s(adm1, bs="mrf",xt=BurkinaFarms_polys)
+#' sigma_v1_formula<-~1
+#' sigma_u1_formula<-~farmtype+s(pest_millet, bs="ps")
+#' 
+#' mu_2_formula<-qharv_sorghum~s(land_sorghum, bs="ps")+s(labour_sorghum, bs="ps")+
+#'                             s(material, bs="ps")+s(fert_sorghum, bs="ps")+
+#'                             s(adm1, bs="mrf",xt=BurkinaFarms_polys)
+#' sigma_v2_formula<-~1
+#' sigma_u2_formula<-~farmtype+s(pest_sorghum, bs="ps")
+#' 
+#' delta_formula<-~1
+#' 
+#' model<-dsfa(formula=list(mu_1_formula, sigma_v1_formula, sigma_u1_formula,
+#'                                 mu_2_formula, sigma_v2_formula, sigma_u2_formula,
+#'                                 delta_formula),
+#'                         data=BurkinaFarms,
+#'                         family=comper_mv(s=c(-1,-1),
+#'                         distr=c("normhnorm","normhnorm","normal")),
+#'                         optimizer="efs")
+#' plot(model) 
 #'}
 #'
 #' @references
 #' \itemize{
-#' \item \insertRef{schmidt2022mvdsfm}{dsfa}
+#' \item \insertRef{schmidt2023multivariate}{dsfa}
 #' \item \insertRef{wood2017generalized}{dsfa}
 #' \item \insertRef{aigner1977formulation}{dsfa}
 #' \item \insertRef{kumbhakar2015practitioner}{dsfa}
@@ -111,7 +144,7 @@
 #' }
 #' @export
 #comper distribution object for mgcv
-comper_mv<- function(link = list("identity", "log", "log","identity", "log", "log","glogit"), s = c(-1,-1), distr=c("normhnorm","normhnorm","normal"), rot=0){
+comper_mv<- function(link = list("identity", "logshift", "logshift","identity", "logshift", "logshift","glogit"), s = c(-1,-1), distr=c("normhnorm","normhnorm","normal"), rot=0, b=1e-2){
   #Object for mgcv::gam such that the composed-error distribution can be estimated.
   
   #Number of parameters
@@ -122,50 +155,104 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
   
   #Link functions
   if (length(link) != npar) stop("comperr_mv requires 7 links specified as character strings")
-  okLinks <- list("identity", "log", "log","identity", "log", "log", "glogit")
+  okLinks <- list("identity", "logshift", "logshift","identity", "logshift", "logshift", "glogit")
   stats <- list()
   param.names <- c("mu1", "sigma_v1", "sigma_u1","mu2", "sigma_v2", "sigma_u2","delta")
-  for (i in 1:6) { # Links for "mu1", "sigma_v1", "sigma_u1","mu2", "sigma_v2", "sigma_u2","delta"
-    if (link[[i]] %in% okLinks[[i]]) stats[[i]] <- stats::make.link(link[[i]]) else
-      stop(link[[i]]," link not available for ", param.names[i]," parameter of comper_mv")
-    fam <- structure(list(link=link[[i]],canonical="none",linkfun=stats[[i]]$linkfun,
-                          mu.eta=stats[[i]]$mu.eta),
-                     class="family")
-    fam <- mgcv::fix.family.link(fam)
-    stats[[i]]$d2link <- fam$d2link
-    stats[[i]]$d3link <- fam$d3link
-    stats[[i]]$d4link <- fam$d4link
-  }
-  if (link[[7]] %in% okLinks[[7]]) {
-    stats[[7]] <- list()
-    stats[[7]]$valideta <- function(eta) TRUE
-    stats[[7]]$link = link[[7]]
-    
-    stats[[7]]$linkfun <- eval(parse(text = paste("function(mu) log((-",minmax[1],"+mu)/(",minmax[2],"-mu))")))#eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
-    stats[[7]]$linkinv <- eval(parse(text = paste("function(eta) exp(eta)/(1+exp(eta))*(",minmax[2],"-",minmax[1],")+",minmax[1])))
-    stats[[7]]$mu.eta <- eval(parse(text = paste("function(eta) exp(eta)*(",minmax[2],"-",minmax[1],")/(exp(eta)+1)^2")))
-    stats[[7]]$d2link <- eval(parse(text = paste("function(mu) 1/(",minmax[2],"-mu)^2-1/(",minmax[1],"-mu)^2")))#eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
-    stats[[7]]$d3link <- eval(parse(text = paste("function(mu) 2*(1/(",minmax[2],"-mu)^3+1/(-",minmax[1],"+mu)^3)"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
-    stats[[7]]$d4link <- eval(parse(text = paste("function(mu) 6/(",minmax[2],"-mu)^4-6/(",minmax[1],"-mu)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
-  }
-  else stop(link[[7]], " link not available comper_mv distribution")
   
-  residuals <- function(object, type = c("deviance", "response")) {
+  for (i in 1:npar) { # Links for mu, sigma_v, sigma_u
+    if (link[[i]] %in% okLinks[[i]]) {
+      
+      if(link[[i]]%in%c("identity", "log")){
+        
+        stats[[i]] <- stats::make.link(link[[i]])
+        fam <- structure(list(link=link[[i]],canonical="none",linkfun=stats[[i]]$linkfun,
+                              mu.eta=stats[[i]]$mu.eta),
+                         class="family")
+        fam <- mgcv::fix.family.link(fam)
+        stats[[i]]$d2link <- fam$d2link
+        stats[[i]]$d3link <- fam$d3link
+        stats[[i]]$d4link <- fam$d4link
+      }
+      
+      if(link[[i]]%in%c("logshift")){
+        
+        stats[[i]] <- list()
+        stats[[i]]$valideta <- function(eta) TRUE 
+        stats[[i]]$link = link[[i]]
+        stats[[i]]$linkfun <- eval(parse(text=paste("function(mu) log(mu)  + ",b)))
+        stats[[i]]$linkinv <- eval(parse(text=paste("function(eta) exp(eta - ",b,")")))
+        stats[[i]]$mu.eta <-  eval(parse(text=paste("function(eta) exp(eta - ",b,")")))
+        stats[[i]]$d2link <-  eval(parse(text=paste("function(mu)  -1/mu^2",sep='')))
+        stats[[i]]$d3link <-  eval(parse(text=paste("function(mu)  2/mu^3",sep='')))
+        stats[[i]]$d4link <-  eval(parse(text=paste("function(mu)  -6/mu^4",sep='')))
+      } 
+      
+      if(link[[i]]%in%c("glogit")){
+        
+        stats[[i]] <- list()
+        stats[[i]]$valideta <- function(eta) TRUE
+        stats[[i]]$link = link[[i]]
+        
+        stats[[i]]$linkfun <- eval(parse(text = paste("function(mu) log((-",minmax[1],"+mu)/(",minmax[2],"-mu))")))#eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
+        stats[[i]]$linkinv <- eval(parse(text = paste("function(eta) exp(eta)/(1+exp(eta))*(",minmax[2],"-",minmax[1],")+",minmax[1])))
+        stats[[i]]$mu.eta <- eval(parse(text = paste("function(eta) exp(eta)*(",minmax[2],"-",minmax[1],")/(exp(eta)+1)^2")))
+        stats[[i]]$d2link <- eval(parse(text = paste("function(mu) 1/(",minmax[2],"-mu)^2-1/(",minmax[1],"-mu)^2")))#eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
+        stats[[i]]$d3link <- eval(parse(text = paste("function(mu) 2*(1/(",minmax[2],"-mu)^3+1/(-",minmax[1],"+mu)^3)"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
+        stats[[i]]$d4link <- eval(parse(text = paste("function(mu) 6/(",minmax[2],"-mu)^4-6/(",minmax[1],"-mu)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
+        
+      } 
+    } else {
+      stop(link[[i]]," link not available for ", param.names[i]," parameter of comper")
+    }
+  }
+  
+  # for (i in 1:6) { # Links for "mu1", "sigma_v1", "sigma_u1","mu2", "sigma_v2", "sigma_u2","delta"
+  #   if (link[[i]] %in% okLinks[[i]]) stats[[i]] <- stats::make.link(link[[i]]) else
+  #     stop(link[[i]]," link not available for ", param.names[i]," parameter of comper_mv")
+  #   fam <- structure(list(link=link[[i]],canonical="none",linkfun=stats[[i]]$linkfun,
+  #                         mu.eta=stats[[i]]$mu.eta),
+  #                    class="family")
+  #   fam <- mgcv::fix.family.link(fam)
+  #   stats[[i]]$d2link <- fam$d2link
+  #   stats[[i]]$d3link <- fam$d3link
+  #   stats[[i]]$d4link <- fam$d4link
+  # }
+  # if (link[[7]] %in% okLinks[[7]]) {
+  #   stats[[7]] <- list()
+  #   stats[[7]]$valideta <- function(eta) TRUE
+  #   stats[[7]]$link = link[[7]]
+  #   
+  #   stats[[7]]$linkfun <- eval(parse(text = paste("function(mu) log((-",minmax[1],"+mu)/(",minmax[2],"-mu))")))#eval(parse(text = paste("function(mu) log((mu+1)/(1-mu))")))
+  #   stats[[7]]$linkinv <- eval(parse(text = paste("function(eta) exp(eta)/(1+exp(eta))*(",minmax[2],"-",minmax[1],")+",minmax[1])))
+  #   stats[[7]]$mu.eta <- eval(parse(text = paste("function(eta) exp(eta)*(",minmax[2],"-",minmax[1],")/(exp(eta)+1)^2")))
+  #   stats[[7]]$d2link <- eval(parse(text = paste("function(mu) 1/(",minmax[2],"-mu)^2-1/(",minmax[1],"-mu)^2")))#eval(parse(text = paste("function(mu) 4*mu/(mu^2-1)^2"))) #-((2 * exp(eta) * (-1 + exp(eta)))/(1 + exp(eta))^3)
+  #   stats[[7]]$d3link <- eval(parse(text = paste("function(mu) 2*(1/(",minmax[2],"-mu)^3+1/(-",minmax[1],"+mu)^3)"))) #(2 * exp(eta) * (1 - 4 * exp(eta) + exp(2 * eta)))/(1 + exp(eta))^4
+  #   stats[[7]]$d4link <- eval(parse(text = paste("function(mu) 6/(",minmax[2],"-mu)^4-6/(",minmax[1],"-mu)^4"))) #-((2 * exp(eta)*  (-1 + 11 * exp(eta) - 11 * exp(2 * eta) + exp(3 * eta)))/(1 + exp(eta))^5)
+  # }
+  # else stop(link[[7]], " link not available comper_mv distribution")
+  # 
+  residuals <- function(object, type = c("deviance", "response", "normalized")) {
     #Calculate residuals
     type <- match.arg(type)
     
-    mom1<-par2mom(mu=object$fitted[,1], sigma_v = object$fitted[,2], sigma_u=object$fitted[,3], s=object$family$s[1], distr=object$family$distr[1])
-    mom2<-par2mom(mu=object$fitted[,4], sigma_v = object$fitted[,5], sigma_u=object$fitted[,6], s=object$family$s[2], distr=object$family$distr[2])
-    
-    y_hat<-cbind(mom1[,1],mom2[,1])
-    
-    rsd <- object$y-y_hat
-    
-    if (type=="response"){
-      out<-rsd
-    }  else {
-      out<-rsd/cbind(mom1[,2],mom2[,2])
+    if(type%in%c("deviance", "response")){
+      mom1<-par2mom(mu=object$fitted[,1], sigma_v = object$fitted[,2], sigma_u=object$fitted[,3], s=object$family$s[1], distr=object$family$distr[1])
+      mom2<-par2mom(mu=object$fitted[,4], sigma_v = object$fitted[,5], sigma_u=object$fitted[,6], s=object$family$s[2], distr=object$family$distr[2])
+      
+      y_hat<-cbind(mom1[,1],mom2[,1])
+      
+      rsd <- object$y-y_hat
+      
+      if (type=="response"){
+        out<-rsd
+      }  else {
+        out<-rsd/cbind(mom1[,2],mom2[,2])
+      }
+    } else{
+      out<-cbind(stats::qnorm(pcomper(q=object$y[,1], mu=object$fitted[,1], sigma_v = object$fitted[,2], sigma_u=object$fitted[,3], s=object$family$s[1], distr=object$family$distr[1])),
+                 stats::qnorm(pcomper(q=object$y[,2], mu=object$fitted[,4], sigma_v = object$fitted[,5], sigma_u=object$fitted[,6], s=object$family$s[2], distr=object$family$distr[2])))
     }
+    
     
     return(out)
   }
@@ -343,7 +430,7 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
       x7<-x[,jj[[7]],drop=FALSE]
                 
       m3<-try(mgcv::gam(y1 ~ x7-1, family=cop(W=cbind(F1,F2),
-              distr_cop=family$distr[3], rot=family$rot), optimizer = "efs"), silent = TRUE)
+              distr=family$distr[3], rot=family$rot), optimizer = "efs"), silent = TRUE)
       
       if (any(class(m3) == "try-error")) {
         stop(paste("Algorithm to fit starting values for copula did not converge", "\n", ""))
@@ -459,6 +546,7 @@ comper_mv<- function(link = list("identity", "log", "log","identity", "log", "lo
                  s = s, #production or cost function
                  distr = distr, #specifiying distribution
                  rot = rot, #rotation
+                 b=b,
                  residuals = residuals, #residual function
                  rd=rd, #random number generation
                  cdf=cdf, #cdf function

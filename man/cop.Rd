@@ -4,21 +4,21 @@
 \alias{cop}
 \title{cop}
 \usage{
-cop(link = list("glogit"), W, distr_cop = "normal", rot = 0)
+cop(link = list("glogit"), W, distr = "normal", rot = 0)
 }
 \arguments{
 \item{link}{formula, specifying the link for \eqn{\delta} parameter. See details.}
 
 \item{W}{numeric matrix of pseudo observations. Must have two columns.}
 
-\item{distr_cop}{string, defines the copula family:\cr
-\code{independent} = Independence copula \cr
-\code{normal} = Gaussian copula \cr
-\code{clayton} = Clayton copula \cr
-\code{gumbel} = Gumbel copula \cr
-\code{frank} = Frank copula \cr
-\code{joe} = Joe copula \cr
-\code{amh} = Ali-Mikhail-Haq copula \cr}
+\item{distr}{string, defines the copula family:\cr
+`independent` = Independence copula \cr
+`normal` = Gaussian copula \cr
+`clayton` = Clayton copula \cr
+`gumbel` = Gumbel copula \cr
+`frank` = Frank copula \cr
+`joe` = Joe copula \cr
+`amh` = Ali-Mikhail-Haq copula \cr}
 
 \item{rot}{integer determining the rotation for Archimedian copulas. Can be \code{90}, \code{180} or \code{270}.}
 }
@@ -32,12 +32,13 @@ Useable with \code{mgcv::gam}, the additive predictors are specified via a formu
 \details{
 Mostly internal function. Used with gam to fit copula model, which in turn is used for starting values. The function \code{gam} is from the mgcv package and is called with a formula.
 The formula specifies a dummy on the left hand side and the structure of the additive predictor for the \eqn{\delta} parameter on the right hand side.
-Link function is "generalized logit", where for each \code{distr_cop} argument there are specific \code{min} and \code{max} arguments, which are the boundaries of the parameter space.
-Although the parameter space is larger in theory for some copulas, numeric under- and overflow limits the parameter space. The intervals for the parameter \code{delta} are provided by \code{\link[=delta_bounds]{delta_bounds()}}.
+Link function is "generalized logit", where for each \code{distr} argument there are specific \code{min} and \code{max} arguments, which are the boundaries of the parameter space.
+Although the parameter space is larger in theory for some copulas, numeric under- and overflow limits the parameter space. The intervals for the parameter \code{delta} are provided by [delta_bounds()].
 WARNING: Only the estimates of the coefficients are useful. The rest of the 'mgcv' object has no meaningful values,
 as \code{\link[mgcv:gam]{gam()}} was more or less abused here.
 }
 \examples{
+\donttest{
 #Set seed, sample size and type of copula
 set.seed(1337)
 N=500 #Sample size
@@ -52,7 +53,7 @@ eta<-matrix(1+2.5*x1+1.75*sin(pi*x2),nrow=N)
 delta<-transform(x=eta, type="glogitinv", par=as.numeric(delta_bounds(cop)), deriv_order = 0)
 
 #Simulate pseudo observations W and create dataset
-dat<-as.data.frame(rcop(n=N, delta=delta, distr_cop=cop, rot=rot))
+dat<-as.data.frame(rcop(n=N, delta=delta, distr=cop, rot=rot))
 dat$y<-1 #Add dummy response variable
 
 #Write formulae for parameters
@@ -61,7 +62,7 @@ delta_formula<-y~x1+s(x2,bs="ps")
 #Fit model
 model<-mgcv::gam(delta_formula, data=dat,
                  family=cop(W=dat[,1:2],
-                            distr_cop=cop, rot=rot),
+                            distr=cop, rot=rot),
                  optimizer="efs")
 
 #Smooth effects
@@ -69,11 +70,12 @@ model<-mgcv::gam(delta_formula, data=dat,
 plot(model, select=1) #Estimated function
 lines(x2[order(x2)], 1.75*sin(pi*x2[order(x2)])-
         mean(1.75*sin(pi*x2)), col=2) #True effect
+}
 
 }
 \references{
 \itemize{
-\item \insertRef{schmidt2022mvdsfm}{dsfa}
+\item \insertRef{schmidt2023multivariate}{dsfa}
 \item \insertRef{wood2017generalized}{dsfa}
 \item \insertRef{aigner1977formulation}{dsfa}
 \item \insertRef{kumbhakar2015practitioner}{dsfa}

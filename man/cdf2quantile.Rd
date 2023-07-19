@@ -22,7 +22,7 @@ Numeric vector of \code{p} evaluated in the inverse cdf.
 Inverse cumulative distribution function
 }
 \details{
-Code is a clone from the package 'gbutils'.
+Code is a clone from the package \pkg{gbutils}.
 }
 \examples{
 q=5

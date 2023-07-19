@@ -4,7 +4,12 @@
 \alias{comper}
 \title{comper}
 \usage{
-comper(link = list("identity", "log", "log"), s = -1, distr = "normhnorm")
+comper(
+  link = list("identity", "logshift", "logshift"),
+  s = -1,
+  distr = "normhnorm",
+  b = 0.01
+)
 }
 \arguments{
 \item{link}{three item list, specifying the link for the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} parameters. See details.}
@@ -12,11 +17,13 @@ comper(link = list("identity", "log", "log"), s = -1, distr = "normhnorm")
 \item{s}{integer; \eqn{s=-1} for production and \eqn{s=1} for cost function.}
 
 \item{distr}{string; determines the distribution:\cr
-\code{normhnorm}, Normal-halfnormal distribution \cr
-\code{normexp}, Normal-exponential distribution \cr}
+`normhnorm`, Normal-halfnormal distribution \cr
+`normexp`, Normal-exponential distribution \cr}
+
+\item{b}{positive parameter of the logshift link function.}
 }
 \value{
-An object inheriting from class \code{general.family} of the mgcv package, which can be used in the 'mgcv' and 'dsfa' package.
+An object inheriting from class \code{general.family} of the mgcv package, which can be used in the \pkg{mgcv} and \pkg{dsfa} package.
 }
 \description{
 The comper implements the composed-error distribution in which the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} can depend on additive predictors.
@@ -25,9 +32,9 @@ Useable with \code{mgcv::gam}, the additive predictors are specified via a list 
 \details{
 Used with \code{\link[mgcv:gam]{gam()}} to fit distributional stochastic frontier model. The function is called with a list containing three formulae:
 \enumerate{
-\item The first formula specifies the response on the left hand side and the structure of the additive predictor for \eqn{\mu} parameter on the right hand side. Link function is "identity".
-\item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "log".
-\item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_U} on the right hand side. Link function is "log".
+  \item The first formula specifies the response on the left hand side and the structure of the additive predictor for \eqn{\mu} parameter on the right hand side. Link function is "identity".
+  \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_V \}  + b }.
+  \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_U} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_U \}  + b }.
 }
 The fitted values and linear predictors for this family will be three column matrices. The first column is the \eqn{\mu}, the second column is the \eqn{\sigma_V}, the third column is \eqn{\sigma_U}.
 For more details of the distribution see \code{dcomper()}.
@@ -58,7 +65,7 @@ sigma_v_formula<-~1+x4
 sigma_u_formula<-~1+s(x5, bs="ps")
 
 #Fit model
-model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
                  data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
 
 #Model summary
@@ -94,14 +101,14 @@ sigma_v_formula<-~1
 sigma_u_formula<-~bimas
 
 #Fit model with normhnorm dstribution
-model_normhnorm<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 data=RiceFarms, family=comper(s=-1, distr="normhnorm"), optimizer = "efs")
 
 #Summary of model
-summary(model_normhnorm)
+summary(model)
 
 #Plot smooths
-plot(model_normhnorm)
+plot(model)
 }
 
 ### Third example with real data of cost function
@@ -123,21 +130,21 @@ sigma_v_formula<-~1
 sigma_u_formula<-~s(lo, bs="ps") + s(lshare, bs="ps") + s(cshare, bs="ps")
 
 #Fit model with normhnorm dstribution
-model_normhnorm<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
                            data=electricity, family=comper(s=s, distr="normhnorm"),
                            optimizer = "efs")
 
 #Summary of model
-summary(model_normhnorm)
+summary(model)
 
 #Plot smooths
-plot(model_normhnorm)
+plot(model)
 }
 
 }
 \references{
 \itemize{
-\item \insertRef{schmidt2022mvdsfm}{dsfa}
+\item \insertRef{schmidt2023multivariate}{dsfa}
 \item \insertRef{wood2017generalized}{dsfa}
 \item \insertRef{aigner1977formulation}{dsfa}
 \item \insertRef{kumbhakar2015practitioner}{dsfa}

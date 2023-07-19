@@ -7,7 +7,7 @@
 #'
 #' @details Mostly internal function. Used with gam to fit copula model, which in turn is used for starting values. The function \code{gam} is from the mgcv package and is called with a formula.
 #' The formula specifies a dummy on the left hand side and the structure of the additive predictor for the \eqn{\delta} parameter on the right hand side.
-#' Link function is "generalized logit", where for each \code{distr_cop} argument there are specific \code{min} and \code{max} arguments, which are the boundaries of the parameter space.
+#' Link function is "generalized logit", where for each \code{distr} argument there are specific \code{min} and \code{max} arguments, which are the boundaries of the parameter space.
 #' Although the parameter space is larger in theory for some copulas, numeric under- and overflow limits the parameter space. The intervals for the parameter \code{delta} are provided by [delta_bounds()].
 #' WARNING: Only the estimates of the coefficients are useful. The rest of the 'mgcv' object has no meaningful values,
 #' as \code{\link[mgcv:gam]{gam()}} was more or less abused here.
@@ -16,6 +16,7 @@
 #' @param link formula, specifying the link for \eqn{\delta} parameter. See details.
 #' 
 #' @examples 
+#' \donttest{
 #' #Set seed, sample size and type of copula
 #' set.seed(1337)
 #' N=500 #Sample size
@@ -30,7 +31,7 @@
 #' delta<-transform(x=eta, type="glogitinv", par=as.numeric(delta_bounds(cop)), deriv_order = 0)
 #' 
 #' #Simulate pseudo observations W and create dataset
-#' dat<-as.data.frame(rcop(n=N, delta=delta, distr_cop=cop, rot=rot))
+#' dat<-as.data.frame(rcop(n=N, delta=delta, distr=cop, rot=rot))
 #' dat$y<-1 #Add dummy response variable
 #' 
 #' #Write formulae for parameters
@@ -39,7 +40,7 @@
 #' #Fit model
 #' model<-mgcv::gam(delta_formula, data=dat,
 #'                  family=cop(W=dat[,1:2],
-#'                             distr_cop=cop, rot=rot),
+#'                             distr=cop, rot=rot),
 #'                  optimizer="efs")
 #' 
 #' #Smooth effects
@@ -47,12 +48,13 @@
 #' plot(model, select=1) #Estimated function
 #' lines(x2[order(x2)], 1.75*sin(pi*x2[order(x2)])-
 #'         mean(1.75*sin(pi*x2)), col=2) #True effect
+#' }
 #' 
 #' @family copula
 #' 
 #' @references
 #' \itemize{
-#' \item \insertRef{schmidt2022mvdsfm}{dsfa}
+#' \item \insertRef{schmidt2023multivariate}{dsfa}
 #' \item \insertRef{wood2017generalized}{dsfa}
 #' \item \insertRef{aigner1977formulation}{dsfa}
 #' \item \insertRef{kumbhakar2015practitioner}{dsfa}
@@ -61,14 +63,14 @@
 #' }
 #' @export
 #comper distribution object for mgcv
-cop <- function(link = list("glogit"), W, distr_cop="normal", rot=0){
+cop <- function(link = list("glogit"), W, distr="normal", rot=0){
   #Object for mgcv::gam such that the copula can be estimated.
   
   #Number of parameters
   npar <- 1
   
   #Get boundaries of parameter space
-  minmax<-delta_bounds(distr_cop)
+  minmax<-delta_bounds(distr)
   
   #Link functions
   if (length(link) != npar) stop("cop requires 1 links specified as character strings")
@@ -128,7 +130,7 @@ cop <- function(link = list("glogit"), W, distr_cop="normal", rot=0){
     delta      <- matrix(family$linfo[[1]]$linkinv( eta ), nrow=n)
     
     #Evaluate ll
-    l0<-dcop_cpp(u=family$W[,1], v=family$W[,2], p=delta, distr_cop=family$distr_cop, rot=family$rot, deriv_order=2, tri=family$tri_mat, logp = TRUE)
+    l0<-dcop_cpp(u=family$W[,1], v=family$W[,2], p=delta, distr=family$distr, rot=family$rot, deriv_order=2, tri=family$tri_mat, logp = TRUE)
     
     #Assign sum of individual loglikehood contributions to l
     l<-sum(l0)
@@ -196,32 +198,32 @@ cop <- function(link = list("glogit"), W, distr_cop="normal", rot=0){
     
     if (is.null(start)) {
       
-      if(family$distr_cop=="independent"){
+      if(family$distr=="independent"){
         cop_object<-copula::indepCopula(dim = 2)
       }
       
-      if(family$distr_cop=="normal"){
+      if(family$distr=="normal"){
         # cop_dim<-sum(lower.tri(diag(ncol(family$W)), diag=T))#(copula::p2P(c(delta)))
         cop_object<-copula::normalCopula(dim = 2)
       }
       
-      if(family$distr_cop=="clayton"){
+      if(family$distr=="clayton"){
         cop_object<-copula::claytonCopula(dim = 2)
       }
       
-      if(family$distr_cop=="gumbel"){
+      if(family$distr=="gumbel"){
         cop_object<-copula::gumbelCopula(dim = 2)
       }
       
-      if(family$distr_cop=="frank"){
+      if(family$distr=="frank"){
         cop_object<-copula::frankCopula(dim = 2)
       }
       
-      if(family$distr_cop=="joe"){
+      if(family$distr=="joe"){
         cop_object<-copula::joeCopula(dim = 2)
       }
       
-      if(family$distr_cop=="amh"){
+      if(family$distr=="amh"){
         cop_object<-copula::amhCopula(dim = 2)
       }
       
@@ -245,10 +247,27 @@ cop <- function(link = list("glogit"), W, distr_cop="normal", rot=0){
       # get(paste0(cop_distr,"Copula"))
       
       #Wrapper for Copula package function
-      delta_start<-suppressWarnings(copula::fitCopula(copula=cop_object, data=as.matrix(family$W))@estimate)
+      delta_start<-try(copula::fitCopula(copula=cop_object, data=as.matrix(family$W), method="mpl")@estimate, silent = TRUE)
+      
+      if (any(class(delta_start) == "try-error")) {
+        delta_start<-try(copula::fitCopula(copula=cop_object, data=as.matrix(family$W), method="ml")@estimate, silent = TRUE)
+      }
+      
+      if (any(class(delta_start) == "try-error")) {
+        delta_start<-try(copula::fitCopula(copula=cop_object, data=as.matrix(family$W), method="itau")@estimate, silent = TRUE)
+      }
+      
+      if (any(class(delta_start) == "try-error")) {
+        delta_start<-try(copula::fitCopula(copula=cop_object, data=as.matrix(family$W), method="irho")@estimate, silent = TRUE)
+      }
+      
+      if (any(class(delta_start) == "try-error")) {
+        delta_start<-mean(delta_bounds(family$distr))
+      }
+      
       eta_start=dsfa::transform(x=matrix(delta_start),
                       type="glogit",
-                      par=as.numeric(delta_bounds(family$distr_cop)), deriv_order = 0)
+                      par=as.numeric(delta_bounds(family$distr)), deriv_order = 0)
       
       start <- c(eta_start,rep(0,ncol(x)-1))
     }
@@ -266,7 +285,7 @@ cop <- function(link = list("glogit"), W, distr_cop="normal", rot=0){
                  tri = mgcv::trind.generator(npar), # symmetric indices for accessing derivative arrays
                  tri_mat = trind_generator(3), # symmetric indices for accessing derivative matrices
                  initialize=initialize, #initial parameters
-                 distr_cop = distr_cop, #specifiying copula distribution
+                 distr = distr, #specifiying copula distribution
                  rot=rot,
                  W=W, #pseudo observations
                  preinitialize=preinitialize, # specify model matrix

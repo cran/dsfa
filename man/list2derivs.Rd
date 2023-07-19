@@ -13,7 +13,7 @@ list2derivs(f, deriv_order)
 }
 \value{
 Mostly internal function. Returns an object of class \code{derivs}
-For more details see \code{\link[=trind]{trind()}} and \code{\link[=trind_generator]{trind_generator()}}.
+For more details see [trind()] and [trind_generator()].
 }
 \description{
 Transforms a list of matrices d0, d1, d2, d3, d4 to a \code{derivs} object.

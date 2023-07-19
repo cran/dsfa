@@ -5,11 +5,12 @@
 #'
 #' @return Returns a matrix of the expected (in)efficiency estimates as well the lower and upper bound of the \eqn{(1-\alpha)\cdot 100\%} confidence interval.
 #'
-#' @param type default is "jondrow" for \eqn{E[u|\epsilon]}, alternatively "battese" for \eqn{E[\exp(-u)|\epsilon]}.
+#' @param type default is "jondrow" for \eqn{E[U|\mathcal{E}]}, alternatively "battese" for \eqn{E[\exp(-U)|\mathcal{E}]}.
 #' @param alpha for the \eqn{(1-\alpha) \cdot 100\%} confidence interval. Must be in (0,1).
 #' @inheritParams elasticity
 #' 
 #' @examples
+#' \donttest{
 #' #Set seed, sample size and type of function
 #' set.seed(1337)
 #' N=500 #Sample size
@@ -33,16 +34,16 @@
 #' sigma_u_formula<-~1+s(x5, bs="ps")
 #'
 #' #Fit model
-#' model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+#' model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
 #'                  data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
 #'                                    
 #' #Estimate efficiency
 #' efficiency(model, type="jondrow")
 #' efficiency(model, type="battese")
-#' 
+#' }
 #' @references
 #' \itemize{
-#' \item \insertRef{schmidt2022mvdsfm}{dsfa}
+#' \item \insertRef{schmidt2023multivariate}{dsfa}
 #' \item \insertRef{kumbhakar2015practitioner}{dsfa}
 #' \item \insertRef{azzalini2013skew}{dsfa}
 #' \item \insertRef{jondrow1982estimation}{dsfa}
@@ -100,12 +101,19 @@ efficiency<-function (object, alpha=0.05, type="jondrow"){
     
     if(i==1){
       out<-cbind(u, CI_lower, CI_upper)
+      colnames(out)<-c("Expected (In)efficiency", "CI_lower", "CI_upper")
     } else {
-      out<-cbind(out, u, CI_lower, CI_upper)
+      out<-cbind(out, cbind(u, CI_lower, CI_upper))
+      colnames(out)<-paste0(c("Expected (In)efficiency_", "CI_lower_", "CI_upper_"),rep(1:ncol(y), each=3))
     }
   }
-
-  colnames(out)<-paste0(c("u", "CI_lower", "CI_upper"),rep(1:ncol(y), each=3))
+  
+  # if(length(object$family$distr)==1){
+    
+  # } else {
+  #   colnames(out)<-paste0(c("Expected (In)efficiency", "CI_lower_", "CI_upper_"),rep(1:ncol(y), each=3))
+  # }
+  
   #Return output
   return(out)
 }

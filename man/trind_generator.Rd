@@ -10,8 +10,8 @@ trind_generator(K)
 \item{K}{integer; determines the number of parameters.}
 }
 \value{
-Returns a list with index matrices for the first to fourth derivative, which can be accessed via the function \code{\link[=trind]{trind()}}.
-The numerical vectors \code{i_start} and \code{i_end} hold the starting and ending indexes, which are required by \code{\link[=trind]{trind()}} for derivatives greater than two.
+Returns a list with index matrices for the first to fourth derivative, which can be accessed via the function [trind()].
+The numerical vectors \code{i_start} and \code{i_end} hold the starting and ending indexes, which are required by [trind()] for derivatives greater than two.
 }
 \description{
 Generates index matrices for upper triangular storage up to order four.

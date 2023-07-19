@@ -11,7 +11,7 @@ efficiency(object, alpha = 0.05, type = "jondrow")
 
 \item{alpha}{for the \eqn{(1-\alpha) \cdot 100\%} confidence interval. Must be in (0,1).}
 
-\item{type}{default is "jondrow" for \eqn{E[u|\epsilon]}, alternatively "battese" for \eqn{E[\exp(-u)|\epsilon]}.}
+\item{type}{default is "jondrow" for \eqn{E[U|\mathcal{E}]}, alternatively "battese" for \eqn{E[\exp(-U)|\mathcal{E}]}.}
 }
 \value{
 Returns a matrix of the expected (in)efficiency estimates as well the lower and upper bound of the \eqn{(1-\alpha)\cdot 100\%} confidence interval.
@@ -20,6 +20,7 @@ Returns a matrix of the expected (in)efficiency estimates as well the lower and 
 Calculates the expected technical (in)efficiency index.
 }
 \examples{
+\donttest{
 #Set seed, sample size and type of function
 set.seed(1337)
 N=500 #Sample size
@@ -43,17 +44,17 @@ sigma_v_formula<-~1+x4
 sigma_u_formula<-~1+s(x5, bs="ps")
 
 #Fit model
-model<-mgcv::gam(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
+model<-dsfa(formula=list(mu_formula, sigma_v_formula, sigma_u_formula),
                  data=dat, family=comper(s=s, distr="normhnorm"), optimizer = c("efs"))
                                    
 #Estimate efficiency
 efficiency(model, type="jondrow")
 efficiency(model, type="battese")
-
+}
 }
 \references{
 \itemize{
-\item \insertRef{schmidt2022mvdsfm}{dsfa}
+\item \insertRef{schmidt2023multivariate}{dsfa}
 \item \insertRef{kumbhakar2015practitioner}{dsfa}
 \item \insertRef{azzalini2013skew}{dsfa}
 \item \insertRef{jondrow1982estimation}{dsfa}

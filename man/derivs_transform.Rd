@@ -11,24 +11,24 @@ derivs_transform(f, type, par, tri, deriv_order)
 
 \item{type}{string, specifies the transformation function. Available are:
 \enumerate{
-\item  \code{identity}: \eqn{f(x)=x}.
-\item  \code{exp}: \eqn{f(x)=\exp\{x\}}.
-\item  \code{log}: \eqn{f(x)=\log\{x\}}.
-\item  \code{glogit}: \eqn{f(x)=\log\{(-x + min)/(x - max)}, where \code{par=c(min, max)}.
-\item  \code{glogitinv}: \eqn{f(x)=\exp\{x\} \cdot (max + min)/(1 + \exp\{x\}) }, where \code{par=c(min, max)}.
-\item  \code{inv}: \eqn{f(x)=\frac{1}{x}}.
-\item  \code{pnorm}: \eqn{f(x)=\Phi(x)}.
-\item  \code{qnorm}: \eqn{f(x)=\Phi^{-1}(x)}.
-\item  \code{mexp}: \eqn{f(x)=-\exp\{x\}}.
-\item  \code{zeta}: \eqn{f(x)=\log\{2 \cdot \Phi(x)\}}.
-\item  \code{constant}: \eqn{f(x)=c}.
-\item  \code{chainrule_utility}: \eqn{f(x)=f'(x)=f''(x)=f'''(x)=f''''(x)}.
+\item  `identity`: \eqn{f(x)=x}.
+\item  `exp`: \eqn{f(x)=\exp\{x\}}.
+\item  `log`: \eqn{f(x)=\log\{x\}}.
+\item  `glogit`: \eqn{f(x)=\log\{(-x + min)/(x - max)}, where \code{par=c(min, max)}.
+\item  `glogitinv`: \eqn{f(x)=\exp\{x\} \cdot (max + min)/(1 + \exp\{x\}) }, where \code{par=c(min, max)}.
+\item  `inv`: \eqn{f(x)=\frac{1}{x}}.
+\item  `pnorm`: \eqn{f(x)=\Phi(x)}.
+\item  `qnorm`: \eqn{f(x)=\Phi^{-1}(x)}.
+\item  `mexp`: \eqn{f(x)=-\exp\{x\}}.
+\item  `zeta`: \eqn{f(x)=\log\{2 \cdot \Phi(x)\}}.
+\item  `constant`: \eqn{f(x)=c}.
+\item  `chainrule_utility`: \eqn{f(x)=f'(x)=f''(x)=f'''(x)=f''''(x)}.
 \item   onemx: \eqn{1-x}
 }}
 
 \item{par}{numeric vector, additional parameters, e.g. min and max for \code{glogit}.}
 
-\item{tri}{list; created by the function \code{\link[=trind_generator]{trind_generator()}}.}
+\item{tri}{list; created by the function [trind_generator()].}
 
 \item{deriv_order}{integer; maximum order of derivative. Available are \code{0},\code{2} and \code{4}.}
 }
@@ -40,7 +40,7 @@ Transforms a derivs object via the specified function and applies the chainrule.
 }
 \details{
 Takes the derivs object \code{f} as an input for the function specified by \code{type} and evaluates it together with the derivatives utilizing the chainrule.
-For more details see \code{\link[=trind]{trind()}} and \code{\link[=trind_generator]{trind_generator()}}.
+For more details see [trind()] and [trind_generator()].
 }
 \examples{
 A<-matrix(c(1:9)/10, ncol=1)

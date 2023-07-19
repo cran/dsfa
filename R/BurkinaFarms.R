@@ -1,0 +1,42 @@
+#' BurkinaFarms
+#'
+#' Dataset of the Center for Environmental Economics and Policy in Africa (CEEPA), University of Pretoria. It contains information on the production of millet and sorghum in Burkina Faso.
+#'
+#' @format 
+#' BurkinaFarms is a data frame with 560 rows and 20 columns:
+#' \describe{
+#'   \item{hhcode}{Respondent Households’ identification number}
+#'   \item{farmtype}{Type of Farm Entity: \cr
+#' `1` = small-scale\cr
+#' `2` = medium-scale\cr
+#' `3` = large-scale\cr
+#' }
+#' \item{incfarm}{Income of farmers}
+#'   \item{educ1}{education of household head in number of years}
+#'  \item{adm1}{Province/Region}
+#' \item{material}{Light and heavy machinery as well as farm animal power multiplied with their price}
+#' \item{qharv_millet}{Quantity of millet harvested in kg}
+#' \item{lost_millet}{Quantity of millet lost due to disease and pests in kg}
+#' \item{seed_millet}{Amount of seeds used for the production of millet in kg}
+#' \item{land_millet}{Amount of land used for the production of millet in ha}
+#' \item{labour_millet}{Total estimated number of workdays for the production of millet. One day corresponds to 6-8 hours of work completed by one individual. Household labor and hired labor are accumulated}
+#' \item{fert_millet}{Amount of fertilizer used for the production of millet in kg}
+#' \item{pest_millet}{Amount of pesticides used for the production of millet in kg}
+#' \item{qharv_sorghum}{Quantity of sorghum harvested in kg}
+#' \item{lost_sorghum}{Quantity of sorghum lost due to disease and pests in kg}
+#' \item{seed_sorghum}{Amount of seeds used for the production of sorghum in kg}
+#' \item{land_sorghum}{Amount of land used for the production of sorghum in ha}
+#' \item{labour_sorghum}{Total estimated number of workdays for the production of sorghum. One day corresponds to 6-8 hours of work completed by one individual. Household labor and hired labor are accumulated}
+#' \item{fert_sorghum}{Amount of fertilizer used for the production of sorghum in kg}
+#' \item{pest_sorghum}{Amount of pesticides used for the production of sorghum in kg}
+#' }
+#' 
+#' @details 
+#' This is a subset of the data which contains data only from Burkina Faso for the outputs sorghum and millet.
+#' 
+#' @source <https://figshare.com/collections/An_agricultural_survey_for_more_than_9_500_African_households/1574094>
+#' 
+#' @references
+#' \insertRef{waha2016agricultural}{dsfa}
+#' 
+"BurkinaFarms"

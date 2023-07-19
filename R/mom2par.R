@@ -4,7 +4,7 @@
 #'
 #' @return Returns a matrix where the first column corresponds to \eqn{\mu}, the second to \eqn{\sigma_V} and the third to \eqn{\sigma_U}.
 #' 
-#' @details See [dcomper()] for details of the distribution. For the inverse transformation see [par2mom()].
+#' @details See \code{\link{dcomper}} for details of the distribution. For the inverse transformation see \code{\link{par2mom}}.
 #' 
 #' @inheritParams dcomper
 #' @param mean numeric vector of means.

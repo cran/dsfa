@@ -7,7 +7,7 @@
 #' @param ... other arguments for the cdf, e.g. mu, sigma_v, sigma_u, s...
 #' @return Numeric vector of \code{p} evaluated in the inverse cdf.
 #' 
-#' @details Code is a clone from the package 'gbutils'.
+#' @details Code is a clone from the package \pkg{gbutils}.
 #' 
 #' @examples 
 #' q=5

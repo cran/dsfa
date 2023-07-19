@@ -3,6 +3,24 @@
 *** denotes really big changes 
 inp "x" -> inp "y" denotes that input argument x has changed to input argument y
 
+## version 2.0.2
+* cop_distr -> distr to be more consistent for copulas
+
+* Changed output of elasticity and efficiency function such that confidence intervals are now included.
+
+* comper predict function bug fixed, defined npar.
+
+* Added BurkinaFarms data set, which is used as an example in comper_mv.
+
+* Bounded the inputs for W matrix to be in [0,1]^2 via clamp for more stability
+
+* Improved starting values for the copula parameters via mgcv_cop
+
+* Added "normalized" residuals, which are probability integral transformed residuals which are then transformed via qnorm()
+
+* Introduced a wrapper function for mgcv::gam called "dsfa" in order to be in line with the naming convention of R packages
+
+* Changed link function in comper and comper_mv from log to logshift. This is done for more numerical stability.
 
 ## version 2.0.1
 * Added rotations 90, 180 and 270 for archimedian copulas and check parameter bounds of delta for dcop, pcop and rcop

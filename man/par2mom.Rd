@@ -16,8 +16,8 @@ par2mom(mu = 0, sigma_v = 1, sigma_u = 1, s = -1, distr = "normhnorm")
 \item{s}{integer; \eqn{s=-1} for production and \eqn{s=1} for cost function.}
 
 \item{distr}{string; determines the distribution:\cr
-\code{normhnorm}, Normal-halfnormal distribution \cr
-\code{normexp}, Normal-exponential distribution \cr}
+`normhnorm`, Normal-halfnormal distribution \cr
+`normexp`, Normal-exponential distribution \cr}
 }
 \value{
 Returns a matrix where the first column corresponds to the mean, the second to the standard deviation and the third to the skewness.
@@ -26,7 +26,7 @@ Returns a matrix where the first column corresponds to the mean, the second to t
 Calculates the moments of composed-error distribution based on the provided parameters.
 }
 \details{
-See \code{\link[=dcomper]{dcomper()}} for details of the distribution. For the inverse transformation see \code{\link[=mom2par]{mom2par()}}.
+See \code{\link{dcomper}} for details of the distribution. For the inverse transformation see \code{\link{mom2par}}.
 }
 \examples{
 par2mom(mu=0, sigma_v=1, sigma_u=1, s=-1, distr="normhnorm")

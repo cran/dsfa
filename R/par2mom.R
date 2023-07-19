@@ -4,7 +4,7 @@
 #'
 #' @return Returns a matrix where the first column corresponds to the mean, the second to the standard deviation and the third to the skewness.
 #' 
-#' @details See [dcomper()] for details of the distribution. For the inverse transformation see [mom2par()].
+#' @details See \code{\link{dcomper}} for details of the distribution. For the inverse transformation see \code{\link{mom2par}}.
 #'  
 #' @inheritParams dcomper
 #' 
@@ -25,7 +25,8 @@ par2mom<-function(mu=0, sigma_v=1, sigma_u=1, s=-1, distr="normhnorm"){
   distr<-match.arg(distr,c("normhnorm","normexp"))
   
   X<-tryCatch(cbind(0,mu, sigma_v, sigma_u), warning=function(w) {
-    stop("Input vectors have incompatible lengths")})
+    stop("Input vectors have incompatible lengths")
+  })
   
   
   if(distr=="normhnorm"){

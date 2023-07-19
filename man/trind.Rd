@@ -7,10 +7,10 @@
 trind(tri, part_deriv_var)
 }
 \arguments{
-\item{tri}{list; created by the function \code{\link[=trind_generator]{trind_generator()}}.}
+\item{tri}{list; created by the function [trind_generator()].}
 
 \item{part_deriv_var}{integer vector; specifies \eqn{\frac{\partial^J f(\cdot)}{\partial x_{ni_1} ... \partial x_{ni_J}}}.
-The length of the vector is denoted as \eqn{J} and determines the order of the partial derivatives with maximum four. The element \eqn{i_j \in \{0,...,K-1\}}
+The length of the vector is denoted as \eqn{J} and determines the order of the partial derivatives with maximum four. The element \eqn{i_j \in \{0,...,K-1\}}  
 specifies the variable with respect to which the derivative is taken, where \eqn{j \in \{1,...,J\}}, The order corresponds to the order of derivatives.
 For example \code{c(0,0,1,2)} is equal to \eqn{\frac{\partial^4 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n2} \partial x_{n3}}}.
 See details for more information.}
@@ -22,17 +22,17 @@ Integer, the index for a derivs object.
 Provides the column index of the required derivative for the specified order of a \code{derivs} object.
 }
 \details{
-Let \eqn{f:\mathbb{R}^K \to \mathbb{R}^L, (x_{n1},x_{n2},...,x_{nK}) \mapsto f(x_{n1},x_{n2},...,x_{nK})} be differentiable up to order four w.r.t all parameters \eqn{x_{nk}}, where \eqn{k \in \{1,...,K\}} and \eqn{n \in \{1,...,N\}}.
+Let \eqn{f:\mathbb{R}^K -> \mathbb{R}^L, (x_{n1},x_{n2},...,x_{nK}) -> f(x_{n1},x_{n2},...,x_{nK})} be differentiable up to order four w.r.t all parameters \eqn{x_{nk}}, where \eqn{k \in \{1,...,K\}} and \eqn{n \in \{1,...,N\}}.
 Then a \code{derivs} class object is a numeric matrix with \eqn{N} rows and \eqn{L} columns. \eqn{N} is the length  of the input vectors. Further, it has the following attributes:
 \enumerate{
-\item  \code{d1}: a numeric matrix of the first derivatives w.r.t all parameters,
-where the \eqn{nth} row  corresponds to: \eqn{(\frac{\partial   f(\cdot)}{\partial x_{n1}}, \frac{\partial f(\cdot)}{\partial x_{n1}},...,\frac{\partial f(\cdot)}{\partial x_{nK}})}
-\item  \code{d2}: a numeric matrix of the second derivatives w.r.t all parameters,
-where the \eqn{nth} row  corresponds to: \eqn{(\frac{\partial^2 f(\cdot)}{\partial x_{n1} \partial x_{n1}}, \frac{\partial^2 f(\cdot)}{\partial x_{n1} \partial x_{n2}},...,\frac{\partial^2 f(\cdot)}{\partial x_{nK} \partial x_{nK}})}
-\item  \code{d3}: a numeric matrix of the third derivatives w.r.t all parameters,
-where the \eqn{nth} row  corresponds to: \eqn{(\frac{\partial^3 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n1}}, \frac{\partial^3 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n2}},...,\frac{\partial^3 f(\cdot)}{\partial x_{nK} \partial x_{nK} \partial x_{nK}})}
-\item  \code{d4}: a numeric matrix of the fourth derivatives w.r.t all parameters,
-where the \eqn{nth} row  corresponds to: \eqn{(\frac{\partial^4 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n1} \partial x_{n1}}, \frac{\partial^4 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n1} \partial x_{n2}},...,\frac{\partial^4 f(\cdot)}{\partial x_{nK} \partial x_{nK} \partial x_{nK} \partial x_{nK}})}
+\item  `d1`: a numeric matrix of the first derivatives w.r.t all parameters,
+ where the \eqn{nth} row  corresponds to: \eqn{(\frac{\partial   f(\cdot)}{\partial x_{n1}}, \frac{\partial f(\cdot)}{\partial x_{n1}},...,\frac{\partial f(\cdot)}{\partial x_{nK}})}
+\item  `d2`: a numeric matrix of the second derivatives w.r.t all parameters,
+ where the \eqn{nth} row  corresponds to: \eqn{(\frac{\partial^2 f(\cdot)}{\partial x_{n1} \partial x_{n1}}, \frac{\partial^2 f(\cdot)}{\partial x_{n1} \partial x_{n2}},...,\frac{\partial^2 f(\cdot)}{\partial x_{nK} \partial x_{nK}})}
+\item  `d3`: a numeric matrix of the third derivatives w.r.t all parameters,
+ where the \eqn{nth} row  corresponds to: \eqn{(\frac{\partial^3 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n1}}, \frac{\partial^3 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n2}},...,\frac{\partial^3 f(\cdot)}{\partial x_{nK} \partial x_{nK} \partial x_{nK}})}
+\item  `d4`: a numeric matrix of the fourth derivatives w.r.t all parameters,
+ where the \eqn{nth} row  corresponds to: \eqn{(\frac{\partial^4 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n1} \partial x_{n1}}, \frac{\partial^4 f(\cdot)}{\partial x_{n1} \partial x_{n1} \partial x_{n1} \partial x_{n2}},...,\frac{\partial^4 f(\cdot)}{\partial x_{nK} \partial x_{nK} \partial x_{nK} \partial x_{nK}})}
 }
 The function \code{trind()} provides the index for the corresponding derivatives. The \code{derivs} class object allows for a modular system which can be easily extended and is faster than numerical derivatives.
 The advantage compared to analytical derivatives provided by 'mathematica' or \code{\link[stats:deriv]{deriv()}} is that asymptotics and approximations can be used for individual parts.

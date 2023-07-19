@@ -5,46 +5,54 @@
 \title{comper}
 \usage{
 comper_mv(
-  link = list("identity", "log", "log", "identity", "log", "log", "glogit"),
+  link = list("identity", "logshift", "logshift", "identity", "logshift", "logshift",
+    "glogit"),
   s = c(-1, -1),
   distr = c("normhnorm", "normhnorm", "normal"),
-  rot = 0
+  rot = 0,
+  b = 0.01
 )
 }
 \arguments{
-\item{link}{three item list, specifying the link for the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} parameters. See details.}
+\item{link}{seven item list, specifying the links for \eqn{\mu_1}, \eqn{\sigma_{V1}}, \eqn{\sigma_{U2}}, \eqn{\mu_2}, \eqn{\sigma_{V2}},  \eqn{\sigma_{U2}} and \eqn{\delta}. See details.}
 
 \item{s}{integer vector of length two; each element corresponds to one marginal.}
 
 \item{distr}{string vector of length three; the first two elements determine the distribution of the marginals. Available are:\cr
-\code{normhnorm}, Normal-halfnormal distribution \cr
-\code{normexp}, Normal-exponential distribution \cr
+`normhnorm`, Normal-halfnormal distribution \cr
+`normexp`, Normal-exponential distribution \cr
 The last element determines the distribution of the copula:\cr
-\code{independent}, Independence copula \cr
-\code{normal}, Gaussian copula \cr
-\code{clayton}, Clayton copula \cr
-\code{gumbel}, Gumbel copula \cr
-\code{frank}, Frank copula \cr
-\code{joe}, Joe copula \cr
-\code{amh}, Ali-Mikhail-Haq copula \cr}
+`independent`, Independence copula \cr
+`normal`, Gaussian copula \cr
+`clayton`, Clayton copula \cr
+`gumbel`, Gumbel copula \cr
+`frank`, Frank copula \cr
+`joe`, Joe copula \cr
+`amh`, Ali-Mikhail-Haq copula \cr}
 
 \item{rot}{integer determining the rotation for Archimedian copulas. Can be \code{90}, \code{180} or \code{270}.}
+
+\item{b}{positive parameter of the logshift link function.}
 }
 \value{
-An object inheriting from class \code{general.family} of the mgcv package, which can be used in the 'mgcv' and 'dsfa' package.
+An object inheriting from class \code{general.family} of the mgcv package, which can be used in the \pkg{mgcv} and \pkg{dsfa} package.
 }
 \description{
-The comper implements the composed-error distribution in which the \eqn{\mu}, \eqn{\sigma_V} and \eqn{\sigma_U} can depend on additive predictors.
+The comper implements the multivariate composed-error distribution in which the \eqn{\mu_1}, \eqn{\sigma_{V1}}, \eqn{\sigma_{U2}}, \eqn{\mu_2}, \eqn{\sigma_{V2}},  \eqn{\sigma_{U2}} and \eqn{\delta} can depend on additive predictors.
 Useable with \code{mgcv::gam}, the additive predictors are specified via a list of formulae.
 }
 \details{
 Used with \code{\link[mgcv:gam]{gam()}} to fit distributional stochastic frontier model. The function is called with a list containing three formulae:
 \enumerate{
-\item The first formula specifies the response on the left hand side and the structure of the additive predictor for \eqn{\mu} parameter on the right hand side. Link function is "identity".
-\item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_V} on the right hand side. Link function is "log".
-\item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_U} on the right hand side. Link function is "log".
+  \item The first formula specifies the response of marginal one on the left hand side and the structure of the additive predictor for \eqn{\mu_1} parameter on the right hand side. Link function is "identity".
+  \item The second formula is one sided, specifying the additive predictor for the  \eqn{\sigma_{V1}} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_{V1} \}  + b }.
+  \item The third formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_{U1}} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_{U1} \}  + b }.
+  \item The fourth formula specifies the response of marginal two on the left hand side and the structure of the additive predictor for \eqn{\mu_2} parameter on the right hand side. Link function is "identity".
+  \item The fifth formula is one sided, specifying the additive predictor for the  \eqn{\sigma_{V2}} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_{V2} \}  + b }.
+  \item The sixth formula  is one sided, specifying the additive predictor for the  \eqn{\sigma_{U2}} on the right hand side. Link function is "logshift", e.g. \eqn{\log \{ \sigma_{U2} \}  + b }.
+  \item The seventh formula  is one sided, specifying the additive predictor for the  \eqn{\delta} on the right hand side. Link function is "glogit".
 }
-The fitted values and linear predictors for this family will be three column matrices. The first column is the \eqn{\mu}, the second column is the \eqn{\sigma_V}, the third column is \eqn{\sigma_U}.
+The fitted values and linear predictors for this family will be seven column matrices.
 For more details of the distribution see \code{dcomper()}.
 }
 \examples{
@@ -91,7 +99,7 @@ sigma_u2_formula<-~s(x6,bs="ps")
 delta_formula<-~s(x7,bs="ps")
 
 #Fit model
-model<-mgcv::gam(formula=list(mu_1_formula,sigma_v1_formula,sigma_u1_formula,
+model<-dsfa(formula=list(mu_1_formula,sigma_v1_formula,sigma_u1_formula,
                               mu_2_formula,sigma_v2_formula,sigma_u2_formula,
                               delta_formula),  data=dat,
                  family=comper_mv(s=s, distr=c(distr_marg1,distr_marg2,distr_cop)),
@@ -128,12 +136,41 @@ lines(x7[order(x7)], 2.5*cos(4*x7[order(x7)])-
 
 efficiency(model)
 elasticity(model)
+
+#' ### Second example with real data
+
+data(BurkinaFarms)
+data(BurkinaFarms_polys)
+
+#Write formulae for parameters
+mu_1_formula<-qharv_millet~s(land_millet, bs="ps")+s(labour_millet, bs="ps")+
+                           s(material, bs="ps")+s(fert_millet, bs="ps")+
+                           s(adm1, bs="mrf",xt=BurkinaFarms_polys)
+sigma_v1_formula<-~1
+sigma_u1_formula<-~farmtype+s(pest_millet, bs="ps")
+
+mu_2_formula<-qharv_sorghum~s(land_sorghum, bs="ps")+s(labour_sorghum, bs="ps")+
+                            s(material, bs="ps")+s(fert_sorghum, bs="ps")+
+                            s(adm1, bs="mrf",xt=BurkinaFarms_polys)
+sigma_v2_formula<-~1
+sigma_u2_formula<-~farmtype+s(pest_sorghum, bs="ps")
+
+delta_formula<-~1
+
+model<-dsfa(formula=list(mu_1_formula, sigma_v1_formula, sigma_u1_formula,
+                                mu_2_formula, sigma_v2_formula, sigma_u2_formula,
+                                delta_formula),
+                        data=BurkinaFarms,
+                        family=comper_mv(s=c(-1,-1),
+                        distr=c("normhnorm","normhnorm","normal")),
+                        optimizer="efs")
+plot(model) 
 }
 
 }
 \references{
 \itemize{
-\item \insertRef{schmidt2022mvdsfm}{dsfa}
+\item \insertRef{schmidt2023multivariate}{dsfa}
 \item \insertRef{wood2017generalized}{dsfa}
 \item \insertRef{aigner1977formulation}{dsfa}
 \item \insertRef{kumbhakar2015practitioner}{dsfa}
